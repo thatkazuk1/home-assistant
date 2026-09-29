@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="./doc-page.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+doc-page:not(:defined){visibility:hidden}
+</style>
+</helmet>
+
+<doc-page size="letter" margin="0.75in">
+  <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: #1a1a2e; line-height: 1.65; font-size: 15px;">
+
+    <!-- Cover / Title Block -->
+    <div style="text-align: center; padding: 48px 0 40px; border-bottom: 2px solid #0b0d14;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #888; margin-bottom: 12px;">Design Document</div>
+      <h1 style="font-size: 36px; font-weight: 800; letter-spacing: -1px; margin: 0 0 8px; color: #0b0d14;">Cole Street Smart Home Dashboard</h1>
+      <div style="font-size: 15px; color: #666; margin-bottom: 24px;">Home Assistant · Lovelace YAML · Glassmorphism Dark Theme</div>
+      <div style="display: flex; justify-content: center; gap: 24px; font-size: 12px; color: #999;">
+        <span><strong style="color: #555;">Author:</strong> Cole Street</span>
+        <span><strong style="color: #555;">Date:</strong> September 2026</span>
+        <span><strong style="color: #555;">Version:</strong> 3.1</span>
+        <span><strong style="color: #555;">Executor:</strong> Google Antigravity</span>
+      </div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div style="padding: 32px 0 24px;">
+      <h2 style="font-size: 20px; font-weight: 700; margin: 0 0 16px; color: #0b0d14;">Table of Contents</h2>
+      <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ddd; padding-bottom: 4px;"><span>1. Overview &amp; Philosophy</span></div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ddd; padding-bottom: 4px;"><span>2. Technical Requirements</span></div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ddd; padding-bottom: 4px;"><span>3. Design System</span></div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ddd; padding-bottom: 4px;"><span>4. Screen Map — All Views</span></div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ddd; padding-bottom: 4px;"><span>5. Entity Reference</span></div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ddd; padding-bottom: 4px;"><span>6. Component Patterns</span></div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ddd; padding-bottom: 4px;"><span>7. Responsive Behavior</span></div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dotted #ddd; padding-bottom: 4px;"><span>8. Implementation Notes</span></div>
+      </div>
+    </div>
+
+    <!-- 1. Overview -->
+    <div style="break-before: page;"></div>
+    <h2 style="font-size: 22px; font-weight: 700; margin: 0 0 12px; color: #0b0d14; border-bottom: 2px solid #0b0d14; padding-bottom: 8px;">1. Overview &amp; Philosophy</h2>
+    <p>This document specifies the complete UI/UX design for the <strong>Cole Street</strong> Home Assistant dashboard. It serves as the single source of truth for the executor (Google Antigravity) to implement the dashboard from the accompanying <code style="font-family: 'JetBrains Mono', monospace; font-size: 13px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">dashboard.yaml</code> file.</p>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">Core Principles</h3>
+    <ul style="padding-left: 20px;">
+      <li><strong>Glassmorphism dark theme</strong> — Translucent cards with backdrop blur over a deep navy background (#0b0d14). Every card uses the same glass treatment for visual consistency.</li>
+      <li><strong>Minimal scroll on mobile</strong> — The home view prioritizes at-a-glance information. Room details live in dedicated subviews, not pop-ups.</li>
+      <li><strong>Subview architecture</strong> — Rooms are full subviews (not Bubble Card pop-ups) for better navigation, back-button support, and deep-linking.</li>
+      <li><strong>Mushroom-first, Bubble-where-needed</strong> — Mushroom cards handle 90% of UI. Bubble Card is used only for the bottom navigation bar and the washer progress card.</li>
+      <li><strong>Real entity IDs throughout</strong> — No placeholders. Every card references actual entities from the Cole Street HA instance.</li>
+    </ul>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">Target Devices</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      <thead>
+        <tr style="border-bottom: 2px solid #ddd; text-align: left;">
+          <th style="padding: 8px 12px;">Device</th>
+          <th style="padding: 8px 12px;">Screen</th>
+          <th style="padding: 8px 12px;">Layout</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Samsung S24</td><td style="padding: 8px 12px;">~6.2" / 1080px</td><td style="padding: 8px 12px;">Single column</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">iPhone 13</td><td style="padding: 8px 12px;">~6.1" / 1170px</td><td style="padding: 8px 12px;">Single column</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Desktop PC</td><td style="padding: 8px 12px;">1920px+</td><td style="padding: 8px 12px;">2-column grid (1050px max-width)</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 2. Technical Requirements -->
+    <div style="break-before: page;"></div>
+    <h2 style="font-size: 22px; font-weight: 700; margin: 0 0 12px; color: #0b0d14; border-bottom: 2px solid #0b0d14; padding-bottom: 8px;">2. Technical Requirements</h2>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">HACS Custom Cards Required</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      <thead>
+        <tr style="border-bottom: 2px solid #ddd; text-align: left;">
+          <th style="padding: 8px 12px;">Card</th>
+          <th style="padding: 8px 12px;">Usage</th>
+          <th style="padding: 8px 12px;">Min Version</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">custom:bubble-card</code></td><td style="padding: 8px 12px;">Bottom nav, washer card</td><td style="padding: 8px 12px;">v3.2+</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">custom:card-mod</code></td><td style="padding: 8px 12px;">Glass styling on all cards</td><td style="padding: 8px 12px;">v3.4+</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">custom:mushroom-*</code></td><td style="padding: 8px 12px;">Primary card library</td><td style="padding: 8px 12px;">Latest</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">custom:mini-graph-card</code></td><td style="padding: 8px 12px;">Energy usage charts</td><td style="padding: 8px 12px;">v0.12+</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">custom:stack-in-card</code></td><td style="padding: 8px 12px;">Composite energy cards</td><td style="padding: 8px 12px;">Latest</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">custom:mod-card</code></td><td style="padding: 8px 12px;">Page wrapper (transparent)</td><td style="padding: 8px 12px;">Latest</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">Dashboard Path</h3>
+    <p>Dashboard URL base: <code style="font-family: 'JetBrains Mono', monospace; font-size: 13px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">/cole-street/</code></p>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">Room Backdrop Images</h3>
+    <p>Place these in <code style="font-family: 'JetBrains Mono', monospace; font-size: 13px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">/config/www/</code> (accessible as <code style="font-family: 'JetBrains Mono', monospace; font-size: 13px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">/local/</code>):</p>
+    <ul style="padding-left: 20px; font-size: 14px;">
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">living_room_backdrop.jpg</code></li>
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">master_bedroom_backdrop.jpg</code></li>
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">bedroom_backdrop.jpg</code> (guest)</li>
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">kitchen_backdrop.jpg</code></li>
+    </ul>
+    <p>Images should be landscape, ≥800px wide, with a subject that works under a gradient mask (fades from full opacity at top to transparent at bottom 60%).</p>
+
+    <!-- 3. Design System -->
+    <div style="break-before: page;"></div>
+    <h2 style="font-size: 22px; font-weight: 700; margin: 0 0 12px; color: #0b0d14; border-bottom: 2px solid #0b0d14; padding-bottom: 8px;">3. Design System</h2>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">Typography</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 8px 12px;">Role</th><th style="padding: 8px 12px;">Font Stack</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Primary</td><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif</code></td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Section headers</td><td style="padding: 8px 12px;">14–15px, weight 500, opacity 0.8</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Card primary</td><td style="padding: 8px 12px;">12–13px, weight 500</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Card secondary</td><td style="padding: 8px 12px;">10–11px, weight 400–500, opacity 0.3–0.5</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Large values</td><td style="padding: 8px 12px;">17–20px, weight 500</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">Color Palette</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 8px 12px;">Token</th><th style="padding: 8px 12px;">Value</th><th style="padding: 8px 12px;">Usage</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Background</td><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">#0b0d14</code></td><td style="padding: 8px 12px;">Page background</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Glass fill</td><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">rgba(255,255,255,0.06)</code></td><td style="padding: 8px 12px;">Home page cards</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Glass fill (subview)</td><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">rgba(255,255,255,0.04)</code></td><td style="padding: 8px 12px;">Subview cards</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Blur</td><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">blur(25px) saturate(120%)</code></td><td style="padding: 8px 12px;">All glass cards</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Border</td><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">rgba(255,255,255,0.08)</code></td><td style="padding: 8px 12px;">Card edges</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Highlight border</td><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">rgba(255,255,255,0.2)</code></td><td style="padding: 8px 12px;">Top edge of every card</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Danger</td><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">#ea4335</code></td><td style="padding: 8px 12px;">Homelab shutdown</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">Accent Colors (per entity type)</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 8px 12px;">Color</th><th style="padding: 8px 12px;">Hex</th><th style="padding: 8px 12px;">Entities</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Blue</td><td style="padding: 8px 12px;">#448AFF</td><td style="padding: 8px 12px;">TV, media player</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Teal</td><td style="padding: 8px 12px;">#26A69A</td><td style="padding: 8px 12px;">Workspace</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Cyan</td><td style="padding: 8px 12px;">#00BCD4</td><td style="padding: 8px 12px;">Fridge, AC power</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Indigo</td><td style="padding: 8px 12px;">#7986CB</td><td style="padding: 8px 12px;">Freezer</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Orange</td><td style="padding: 8px 12px;">#FF9800</td><td style="padding: 8px 12px;">Kitchen socket</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Amber</td><td style="padding: 8px 12px;">#FFB300</td><td style="padding: 8px 12px;">Energy costs, screen backlight</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Green</td><td style="padding: 8px 12px;">#34a853</td><td style="padding: 8px 12px;">Battery good, presence home</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">Red</td><td style="padding: 8px 12px;">#ea4335</td><td style="padding: 8px 12px;">Danger / shutdown</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">Card Radii</h3>
+    <ul style="padding-left: 20px; font-size: 14px;">
+      <li>Large cards (weather, room tiles, energy charts): <strong>24px</strong></li>
+      <li>Standard cards: <strong>20px</strong></li>
+      <li>Chips: <strong>20px</strong></li>
+      <li>Nav bar: <strong>28px</strong></li>
+      <li>Power tiles: <strong>14–16px</strong></li>
+    </ul>
+
+    <!-- 4. Screen Map -->
+    <div style="break-before: page;"></div>
+    <h2 style="font-size: 22px; font-weight: 700; margin: 0 0 12px; color: #0b0d14; border-bottom: 2px solid #0b0d14; padding-bottom: 8px;">4. Screen Map — All Views</h2>
+
+    <p>The dashboard has <strong>7 views</strong>: 1 main panel + 5 room subviews + 1 top-level Infrastructure view. The bottom navigation bar persists on the Home view. Subviews use breadcrumb chips to return home. Infrastructure is a standalone top-level view at its own path.</p>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">View 1: Home <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">/cole-street/home</code></h3>
+    <p><strong>Type:</strong> Panel view with <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">mod-card</code> wrapper (1050px max-width). <strong>Layout:</strong> 2-column grid on desktop (&gt;800px), single column on mobile.</p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">Section</th><th style="padding: 6px 10px;">Column</th><th style="padding: 6px 10px;">Cards</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Status Chips</td><td style="padding: 6px 10px;">Full width</td><td style="padding: 6px 10px;">Time, weather, person, phone battery, watch ×2</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Weather Forecast</td><td style="padding: 6px 10px;">Left</td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">weather-forecast</code> with daily forecast</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Finances</td><td style="padding: 6px 10px;">Left</td><td style="padding: 6px 10px;">This Week ($) + This Month ($) — 2-col grid</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Energy Costs</td><td style="padding: 6px 10px;">Left</td><td style="padding: 6px 10px;">Today (₦) + This Month (₦) — 2-col grid</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Live Power</td><td style="padding: 6px 10px;">Left</td><td style="padding: 6px 10px;">TV / Workspace / Fridge / Freezer / Kitchen — 5-col grid</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">System</td><td style="padding: 6px 10px;">Left</td><td style="padding: 6px 10px;">CPU, Memory, Backups, HACS — 2-col grid + Shutdown button</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Rooms</td><td style="padding: 6px 10px;">Right (440px max)</td><td style="padding: 6px 10px;">2×2 square tiles with backdrop images → navigate to subviews</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Bottom Nav</td><td style="padding: 6px 10px;">Fixed bottom</td><td style="padding: 6px 10px;">Bubble horizontal-buttons-stack: Home / Living / Bedroom / Guest / Kitchen / Cameras</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">View 2: Living Room <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">/cole-street/living-room</code></h3>
+    <p><strong>Type:</strong> Subview (back arrow in HA header). <strong>Layout:</strong> Single column, 900px max-width.</p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">Section</th><th style="padding: 6px 10px;">Cards</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Breadcrumb</td><td style="padding: 6px 10px;">Home chip + motion sensor chip (green when detected)</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Camera</td><td style="padding: 6px 10px;">Living Room + Hall — 2-col, tap → more-info</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Media</td><td style="padding: 6px 10px;">TCL 55'' QLED TV — media player with prev/pause/next + mute</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Climate</td><td style="padding: 6px 10px;">AC Power (toggle) + Screen Display (toggle) — 2-col</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Controls</td><td style="padding: 6px 10px;">TV / Workspace / Fridge / Freezer — 2-col, each shows live watts, tap → toggle</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Energy</td><td style="padding: 6px 10px;">4× stack-in-card: entity header + 24h mini-graph (TV, Workspace, Fridge, Freezer) — 2-col, 1-col on mobile</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">View 3: Master Bedroom <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">/cole-street/master-bedroom</code></h3>
+    <p><strong>Sections:</strong> Breadcrumb → Climate (AC Power + Screen Display). Minimal view — only AC controls.</p>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">View 4: Guest Bedroom <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">/cole-street/guest-bedroom</code></h3>
+    <p><strong>Sections:</strong> Breadcrumb (with motion chip) → Climate (AC Power + Screen Display). Same structure as Master Bedroom.</p>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">View 5: Kitchen <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">/cole-street/kitchen</code></h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">Section</th><th style="padding: 6px 10px;">Cards</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Breadcrumb</td><td style="padding: 6px 10px;">Home chip + "Kitchen" label</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Controls</td><td style="padding: 6px 10px;">Kitchen socket — toggle + watts</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Appliances</td><td style="padding: 6px 10px;">Washer — Bubble Card with animated icon, progress bar, remaining time sub-button</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Energy</td><td style="padding: 6px 10px;">Socket usage — stack-in-card with 24h mini-graph</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">View 6: Cameras <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">/cole-street/cameras</code></h3>
+    <p><strong>Sections:</strong> Breadcrumb → All Cameras (Living Room, Hall, Guest Bedroom) — 2-col grid, each showing entity name + motion status, tap → more-info for live feed.</p>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">View 7: Infrastructure <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">/cole-street/infrastructure</code></h3>
+    <p><strong>Type:</strong> Top-level view (not a subview). <strong>Layout:</strong> 3-column grid, 900px max-width. This is an ops surface — glass fill is intentionally subdued at <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">rgba(255,255,255,0.04)</code> with <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">blur(16px)</code> and <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">border-radius: 22px</code>.</p>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">Section</th><th style="padding: 6px 10px;">Cards</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Hosts Header</td><td style="padding: 6px 10px;">Section label "Hosts" with compact round red icon-button (44px, mdi:power) aligned far right — double-tap → <code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">shell_command.super_power_button</code> (cluster-wide shutdown)</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">Host Grid</td><td style="padding: 6px 10px;">5 host cards in 3-per-row grid, ordered: fw-01 → core-01 → nas-01 → pve-01 → pve-02. Each card shows identity icon, hostname, online/offline status (green/amber). Top-right overlay: amber restart + red shutdown icon buttons (14px icons, ~20px hit target, no background, double-tap with confirmation → <code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">shell_command.host_power_control</code>)</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">core-01 Exception</td><td style="padding: 6px 10px;">Shows CPU/Mem stat chips (icon + percentage, no pill background) instead of online/offline status, since core-01 is the HA host itself. Reuses <code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">sensor.system_monitor_processor_use</code> / <code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">sensor.system_monitor_memory_usage</code></td></tr>
+      </tbody>
+    </table>
+
+    <h4 style="font-size: 14px; font-weight: 600; margin: 16px 0 6px;">Host Icons</h4>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">Host</th><th style="padding: 6px 10px;">Icon</th><th style="padding: 6px 10px;">Role</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">fw-01</td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">mdi:router-network</code></td><td style="padding: 6px 10px;">Firewall/Router</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">core-01</td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">mdi:raspberry-pi</code></td><td style="padding: 6px 10px;">HA host (Raspberry Pi)</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">nas-01</td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">mdi:nas</code></td><td style="padding: 6px 10px;">Network-attached storage</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">pve-01</td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">mdi:server</code></td><td style="padding: 6px 10px;">Proxmox node</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;">pve-02</td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">mdi:server</code></td><td style="padding: 6px 10px;">Proxmox node</td></tr>
+      </tbody>
+    </table>
+
+    <h4 style="font-size: 14px; font-weight: 600; margin: 16px 0 6px;">Online/Offline Sensors</h4>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">Entity ID</th><th style="padding: 6px 10px;">Host</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">binary_sensor.fw_01_online</code></td><td style="padding: 6px 10px;">fw-01</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">binary_sensor.nas_01_online</code></td><td style="padding: 6px 10px;">nas-01</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">binary_sensor.pve_01_online</code></td><td style="padding: 6px 10px;">pve-01</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">binary_sensor.pve_02_online</code></td><td style="padding: 6px 10px;">pve-02</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 5. Entity Reference -->
+    <div style="break-before: page;"></div>
+    <h2 style="font-size: 22px; font-weight: 700; margin: 0 0 12px; color: #0b0d14; border-bottom: 2px solid #0b0d14; padding-bottom: 8px;">5. Entity Reference</h2>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Person &amp; Presence</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">Entity ID</th><th style="padding: 6px 10px;">Description</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">person.nexus</code></td><td style="padding: 6px 10px;">Primary user</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">sensor.sm_s936b_battery_level</code></td><td style="padding: 6px 10px;">Samsung S24 battery</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">sensor.galaxy_watch8_classic_p3cr_battery_level</code></td><td style="padding: 6px 10px;">Galaxy Watch 8 battery</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">sensor.galaxy_watch4_classic_69db_battery_level</code></td><td style="padding: 6px 10px;">Galaxy Watch 4 battery</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Weather &amp; Environment</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">Entity ID</th><th style="padding: 6px 10px;">Description</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">weather.forecast_home_2</code></td><td style="padding: 6px 10px;">Weather forecast</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Smart Plugs (T34 Series)</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">Switch</th><th style="padding: 6px 10px;">Power Sensor</th><th style="padding: 6px 10px;">Energy Sensor</th><th style="padding: 6px 10px;">Location</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">switch.t34_smart_plug_2_tv_switch_1</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.t34_smart_plug_2_tv_power</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.t34_smart_plug_2_tv_total_energy</code></td><td style="padding: 6px 10px;">Living Room</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">switch.t34_smart_plug_3_workspace_switch_1</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.t34_smart_plug_3_workspace_power</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.t34_smart_plug_3_workspace_total_energy</code></td><td style="padding: 6px 10px;">Living Room</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">switch.t34_smart_plug_4_fridge_switch_1</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.t34_smart_plug_4_fridge_power</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.t34_smart_plug_4_fridge_total_energy</code></td><td style="padding: 6px 10px;">Living Room</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">switch.t34_smart_plug_5_freezer_switch_1</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.t34_smart_plug_5_freezer_power</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.t34_smart_plug_5_freezer_total_energy</code></td><td style="padding: 6px 10px;">Living Room</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">switch.t34_smart_plug_switch_1</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.t34_smart_plug_power</code></td><td style="padding: 6px 10px;">—</td><td style="padding: 6px 10px;">Kitchen</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Climate (AC Switches)</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">AC Switch</th><th style="padding: 6px 10px;">Backlight</th><th style="padding: 6px 10px;">Room</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">switch.switch_ac_living_room_switch_1</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">light.switch_ac_living_room_backlight</code></td><td style="padding: 6px 10px;">Living Room</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">switch.switch_ac_master_bedroom_switch_1</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">light.switch_ac_master_bedroom_backlight</code></td><td style="padding: 6px 10px;">Master Bedroom</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">switch.switch_ac_guest_bedroom_switch_1</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">light.switch_ac_guest_bedroom_backlight</code></td><td style="padding: 6px 10px;">Guest Bedroom</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Cameras &amp; Motion</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">Camera</th><th style="padding: 6px 10px;">Motion Sensor</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">camera.camera_living_room_profile_000</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">binary_sensor.camera_living_room_motion_region_detection</code></td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">camera.camera_living_room_hall_profile_000</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">binary_sensor.camera_living_room_hall_motion_region_detection</code></td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">camera.camera_guest_bedroom_profile_000</code></td><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">binary_sensor.camera_guest_bedroom_motion_region_detection</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Other Entities</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">Entity ID</th><th style="padding: 6px 10px;">Usage</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">media_player.living_room_tv_master</code></td><td style="padding: 6px 10px;">TCL TV media player</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.sure_spending_current_week</code></td><td style="padding: 6px 10px;">Sure Finance — weekly spend ($)</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.sure_spending_current_month</code></td><td style="padding: 6px 10px;">Sure Finance — monthly spend ($)</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.total_daily_energy_cost</code></td><td style="padding: 6px 10px;">Daily energy cost (₦)</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.total_monthly_energy_cost</code></td><td style="padding: 6px 10px;">Monthly energy cost (₦)</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">sensor.washer_current_status</code></td><td style="padding: 6px 10px;">Washer cycle status</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">shell_command.super_power_button</code></td><td style="padding: 6px 10px;">Homelab cluster shutdown</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Infrastructure Hosts</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 6px 10px;">Entity ID</th><th style="padding: 6px 10px;">Usage</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">binary_sensor.fw_01_online</code></td><td style="padding: 6px 10px;">fw-01 ping check (scan_interval: 120s)</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">binary_sensor.nas_01_online</code></td><td style="padding: 6px 10px;">nas-01 ping check</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">binary_sensor.pve_01_online</code></td><td style="padding: 6px 10px;">pve-01 ping check</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">binary_sensor.pve_02_online</code></td><td style="padding: 6px 10px;">pve-02 ping check</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px 10px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">shell_command.host_power_control</code></td><td style="padding: 6px 10px;">Per-host reboot/shutdown (service_data: host, action)</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 6. Component Patterns -->
+    <div style="break-before: page;"></div>
+    <h2 style="font-size: 22px; font-weight: 700; margin: 0 0 12px; color: #0b0d14; border-bottom: 2px solid #0b0d14; padding-bottom: 8px;">6. Component Patterns</h2>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Glass Card (Home page)</h3>
+    <p>YAML anchor <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">&amp;glass_card</code> — applied via <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">card_mod</code> on each Mushroom card:</p>
+    <pre style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #f0f0f5; padding: 14px 16px; border-radius: 8px; overflow-x: auto; line-height: 1.5; white-space: pre-wrap;">background: rgba(255, 255, 255, 0.06)
+backdrop-filter: blur(25px) saturate(120%)
+border-radius: 24px
+border: 1px solid rgba(255, 255, 255, 0.08)
+border-top: 1px solid rgba(255, 255, 255, 0.2)
+box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1)</pre>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Glass Card (Subview)</h3>
+    <p>YAML anchor <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">&amp;subview_card</code> — slightly more transparent:</p>
+    <pre style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #f0f0f5; padding: 14px 16px; border-radius: 8px; overflow-x: auto; line-height: 1.5; white-space: pre-wrap;">background: rgba(255, 255, 255, 0.04)
+backdrop-filter: blur(30px) saturate(140%)
+border-radius: 20px
+border: 1px solid rgba(255, 255, 255, 0.04)
+border-top: 1px solid rgba(255, 255, 255, 0.12)</pre>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Section Header (transparent)</h3>
+    <p>YAML anchor <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #f0f0f5; padding: 2px 6px; border-radius: 4px;">&amp;section_header</code> — a <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">mushroom-template-card</code> stripped of all backgrounds, acting as a pure text label with icon. All <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">::before</code>/<code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">::after</code> pseudo-elements are killed to prevent theme glass layers from leaking through.</p>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Room Tile</h3>
+    <p>Square <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">mushroom-template-card</code> with:</p>
+    <ul style="padding-left: 20px; font-size: 14px;">
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">::before</code> pseudo-element loads a background image from <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">/local/</code> with gradient mask (fade from top to transparent at 60%)</li>
+      <li>Icon positioned bottom-left in a quarter-circle shape</li>
+      <li>Room name positioned bottom-right with text shadow</li>
+      <li>Tap action navigates to the room's subview</li>
+    </ul>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Washer Progress Card</h3>
+    <p>A <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">custom:bubble-card</code> <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">button</code> with <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">large-2-rows</code> layout. The <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">::after</code> pseudo-element renders a dynamic progress bar computed from <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">washer_total_time</code> and <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">washer_remaining_time_2</code>. The icon spins when the washer is actively running (not idle/paused).</p>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Shutdown Button</h3>
+    <p>A <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">mushroom-template-card</code> with red-tinted glass, nested inside the System section. <strong>Accidental-press resistant:</strong> tap does nothing; <strong>double-tap</strong> fires the shell command with a browser confirmation dialog. Hold also does nothing.</p>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Infrastructure Host Card</h3>
+    <p>A <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">custom:button-card</code> with direct styling (not Mushroom chips). Key design constraints:</p>
+    <ul style="padding-left: 20px; font-size: 14px;">
+      <li><strong>Glass fill:</strong> <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">rgba(255,255,255,0.04)</code>, <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">blur(16px)</code>, <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">border-radius: 22px</code> — intentionally more subdued than room cards</li>
+      <li><strong>No pill/chip backgrounds</strong> anywhere on nested elements — action buttons and stat chips sit directly on the card's glass, not inside their own container</li>
+      <li><strong>Top-right overlay:</strong> amber <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">mdi:restart</code> + red <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">mdi:power</code> (14px icons, ~20px hit target, ~55% opacity). Both are double-tap only with confirmation dialog; tap and hold are no-ops. Calls <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">shell_command.host_power_control</code> with <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">service_data: host/action</code></li>
+      <li><strong>Online status:</strong> green text when <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">binary_sensor.{host}_online</code> is <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">on</code>, amber when <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">off</code></li>
+      <li><strong>core-01 exception:</strong> replaces online/offline status with CPU + Memory stat chips (icon + label, transparent background), reusing <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">sensor.system_monitor_*</code></li>
+    </ul>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Infrastructure Cluster Shutdown</h3>
+    <p>A compact round red icon-button (44px) in the "Hosts" header row, aligned far right. Double-tap → <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">shell_command.super_power_button</code> with confirmation dialog. Same accidental-press resistance as the Home view shutdown: tap and hold are no-ops.</p>
+
+    <!-- 7. Responsive Behavior -->
+    <div style="break-before: page;"></div>
+    <h2 style="font-size: 22px; font-weight: 700; margin: 0 0 12px; color: #0b0d14; border-bottom: 2px solid #0b0d14; padding-bottom: 8px;">7. Responsive Behavior</h2>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 8px 12px;">Breakpoint</th><th style="padding: 8px 12px;">Behavior</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">&lt; 800px (mobile)</td><td style="padding: 8px 12px;">Single column. All grids collapse to 1 column via <code style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">--grid-card-column-count: 1</code>. Room tiles remain 2×2. Bottom nav scrolls horizontally if needed. Content padded 80px at bottom for nav clearance.</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;">≥ 800px (desktop)</td><td style="padding: 8px 12px;">2-column grid on Home view: left column (data) + right column (rooms, 440px max). Subviews stay single-column at 900px max-width. Energy chart grids show 2 columns.</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">Scrollbar</h3>
+    <p>Subtle thin scrollbar: <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent</code>. WebKit: 4px wide, transparent track, 8% white thumb with 4px radius.</p>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">Safe Area</h3>
+    <p>Bottom nav uses <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">padding-bottom: env(safe-area-inset-bottom, 0px)</code> for iPhone notch/home indicator.</p>
+
+    <!-- 8. Implementation Notes -->
+    <h2 style="font-size: 22px; font-weight: 700; margin: 40px 0 12px; color: #0b0d14; border-bottom: 2px solid #0b0d14; padding-bottom: 8px;">8. Implementation Notes</h2>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 16px 0 8px;">Installation Steps</h3>
+    <ol style="padding-left: 20px; font-size: 14px; line-height: 1.8;">
+      <li>Install all HACS custom cards listed in Section 2.</li>
+      <li>Place room backdrop images in <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">/config/www/</code>.</li>
+      <li>Go to <strong>Settings → Dashboards → Add Dashboard</strong>. Set URL to <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">cole-street</code>.</li>
+      <li>Open the dashboard, click the 3-dot menu → <strong>Raw Configuration Editor</strong>.</li>
+      <li>Paste the entire contents of <code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">dashboard.yaml</code>.</li>
+      <li>Save. Clear browser cache if glass styles don't appear immediately.</li>
+    </ol>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">YAML Anchors</h3>
+    <p>The YAML uses anchors (<code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">&amp;</code>) and aliases (<code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">*</code>) extensively to DRY the glass card styles. Key anchors:</p>
+    <ul style="padding-left: 20px; font-size: 14px;">
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">&amp;glass_card</code> — weather card glass</li>
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">&amp;glass_card_sm</code> — standard Mushroom card glass</li>
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">&amp;section_header</code> — transparent section label</li>
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">&amp;subview_card</code> — subview card glass</li>
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">&amp;subview_header</code> — subview section label</li>
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">&amp;chip_bar</code> — breadcrumb chip styling</li>
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">&amp;energy_chart_card</code> — stack-in-card wrapper</li>
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">&amp;energy_inner</code> — transparent inner card</li>
+      <li><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">&amp;mini_graph</code> — mini-graph transparent style</li>
+    </ul>
+
+    <h3 style="font-size: 16px; font-weight: 700; margin: 20px 0 8px;">Companion Files</h3>
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      <thead><tr style="border-bottom: 2px solid #ddd; text-align: left;"><th style="padding: 8px 12px;">File</th><th style="padding: 8px 12px;">Purpose</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">dashboard.yaml</code></td><td style="padding: 8px 12px;">Complete Lovelace YAML — paste into Raw Configuration Editor</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">Dashboard Preview.dc.html</code></td><td style="padding: 8px 12px;">Visual mockup of all 6 screens</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 12px;"><code style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">existing-dashboard-reference.yaml</code></td><td style="padding: 8px 12px;">Entity ID reference extracted from current dashboard</td></tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #0b0d14; text-align: center; font-size: 12px; color: #999;">
+      End of Document · Cole Street Smart Home Dashboard · v3.1
+    </div>
+
+  </div>
+</doc-page>
+
+</x-dc>
+</body>
+</html>

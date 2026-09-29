@@ -1,0 +1,2759 @@
+# ============================================================
+# COLE STREET — Premium Smart Home Dashboard v3
+# ============================================================
+# Matches your existing design language:
+#   - Mushroom + Bubble Card hybrid
+#   - Glassmorphism: rgba(255,255,255,0.06), blur(16px)
+#   - Subviews for rooms, sticky top nav
+#   - stack-in-card + mini-graph-card for energy
+#
+# Requirements (HACS):
+#   - custom:bubble-card (v3.2+)
+#   - custom:card-mod
+#   - custom:mushroom cards
+#   - custom:mini-graph-card
+#   - custom:stack-in-card
+# ============================================================
+
+title: Cole Street
+views:
+  # ══════════════════════════════════════════════
+  # HOME VIEW
+  # ══════════════════════════════════════════════
+  - title: Home
+    path: home
+    icon: mdi:home-variant
+    type: panel
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:mod-card
+            card_mod:
+              style: >
+                ha-card {
+                  max-width: 1050px;
+                  min-height: 95vh;
+                  margin: 0 auto;
+                  padding: 4px 16px 80px 16px !important;
+                  background: transparent !important;
+                  border: none !important;
+                  box-shadow: none !important;
+                  scrollbar-width: thin;
+                  scrollbar-color: rgba(255,255,255,0.08) transparent;
+                }
+                ha-card::before, ha-card::after { content: none !important; display: none !important; }
+                ha-card::-webkit-scrollbar { width: 4px; }
+                ha-card::-webkit-scrollbar-track { background: transparent; }
+                ha-card::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+            card:
+              type: vertical-stack
+              cards:
+                # ── Status + People row (single flowing line) ──
+                - type: horizontal-stack
+                  card_mod:
+                    style: |
+                      #root {
+                        display: flex !important;
+                        flex-wrap: wrap !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        gap: 8px !important;
+                        margin-bottom: 24px !important;
+                      }
+                      #root > hui-card { display: contents !important; }
+                      #root > hui-card > * {
+                        flex: 0 0 auto !important;
+                        width: max-content !important;
+                        max-width: max-content !important;
+                      }
+                  cards:
+                    - &person_pill
+                      type: custom:button-card
+                      entity: person.nexus
+                      triggers_update:
+                        - binary_sensor.nexus_location_stale
+                        - binary_sensor.oyin_location_stale
+                      show_entity_picture: true
+                      show_name: true
+                      show_label: true
+                      show_state: false
+                      name: "[[[ return entity.attributes.friendly_name ]]]"
+                      label: |
+                        [[[
+                          const sk = 'binary_sensor.' + entity.entity_id.split('.')[1] + '_location_stale';
+                          const stale = hass.states[sk] && hass.states[sk].state === 'on';
+                          let base = entity.state === 'home' ? 'Home'
+                                   : entity.state === 'not_home' ? 'Away' : 'Unknown';
+                          return stale ? base + ' (stale)' : base;
+                        ]]]
+                      entity_picture: "[[[ return entity.attributes.entity_picture ]]]"
+                      tap_action:
+                        action: more-info
+                      styles:
+                        card:
+                          - background: rgba(255, 255, 255, 0.05)
+                          - backdrop-filter: blur(16px)
+                          - "-webkit-backdrop-filter": blur(16px)
+                          - border-radius: 22px
+                          - border: >
+                              [[[
+                                const sk = 'binary_sensor.' + entity.entity_id.split('.')[1] + '_location_stale';
+                                if (hass.states[sk] && hass.states[sk].state === 'on') return '1px solid rgba(255, 193, 7, 0.5)';
+                                return entity.state === 'home'
+                                  ? '1px solid rgba(76, 175, 80, 0.5)'
+                                  : '1px solid rgba(255, 255, 255, 0.07)';
+                              ]]]
+                          - box-shadow: 0 2px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)
+                          - padding: 0 16px 0 6px
+                          - height: 44px
+                          - width: max-content
+                        grid:
+                          - grid-template-areas: '"i n" "i s"'
+                          - grid-template-columns: 34px auto
+                          - grid-template-rows: auto auto
+                          - column-gap: 9px
+                          - row-gap: 0px
+                          - align-items: center
+                          - justify-items: start
+                        img_cell:
+                          - grid-area: i
+                          - width: 34px
+                          - height: 34px
+                          - align-self: center
+                          - justify-self: center
+                        entity_picture:
+                          - width: 32px
+                          - height: 32px
+                          - border-radius: 50%
+                          - object-fit: cover
+                          - filter: >
+                              [[[
+                                const sk = 'binary_sensor.' + entity.entity_id.split('.')[1] + '_location_stale';
+                                return (hass.states[sk] && hass.states[sk].state === 'on')
+                                  ? 'grayscale(0.7) brightness(0.7)' : 'none';
+                              ]]]
+                        name:
+                          - grid-area: n
+                          - font-size: 12.5px
+                          - font-weight: 600
+                          - color: var(--primary-text-color)
+                          - justify-self: start
+                          - line-height: 1.2
+                        label:
+                          - grid-area: s
+                          - font-size: 10.5px
+                          - font-weight: 400
+                          - opacity: 0.55
+                          - justify-self: start
+                          - line-height: 1.1
+                          - text-transform: none
+                          - color: >
+                              [[[
+                                const sk = 'binary_sensor.' + entity.entity_id.split('.')[1] + '_location_stale';
+                                return (hass.states[sk] && hass.states[sk].state === 'on')
+                                  ? 'rgba(255, 193, 7, 0.9)' : 'var(--primary-text-color)';
+                              ]]]
+                    - <<: *person_pill
+                      entity: person.oyin
+                    - type: custom:mushroom-chips-card
+                      alignment: center
+                      chips:
+                        - type: template
+                          entity: sensor.sm_s936b_battery_level
+                          icon: mdi:cellphone
+                          content: "{{ states('sensor.sm_s936b_battery_level') }}%"
+                          icon_color: >-
+                            {% set batt = states('sensor.sm_s936b_battery_level') | int(0) %}
+                            {% if batt > 60 %}green{% elif batt > 20 %}orange{% else %}red{% endif %}
+                        - type: template
+                          entity: sensor.galaxy_watch8_classic_p3cr_battery_level
+                          icon: mdi:watch
+                          content: "{{ states('sensor.galaxy_watch8_classic_p3cr_battery_level') }}%"
+                          icon_color: >-
+                            {% set batt = states('sensor.galaxy_watch8_classic_p3cr_battery_level') | int(0) %}
+                            {% if batt > 60 %}green{% elif batt > 20 %}orange{% else %}red{% endif %}
+                        - type: template
+                          entity: sensor.galaxy_watch4_classic_69db_battery_level
+                          icon: mdi:watch-variant
+                          content: >-
+                            {% set b = states('sensor.galaxy_watch4_classic_69db_battery_level') %}
+                            {{ b ~ '%' if b not in ['unknown', 'unavailable', 'none'] else '–' }}
+                          icon_color: >-
+                            {% set batt = states('sensor.galaxy_watch4_classic_69db_battery_level') | int(0) %}
+                            {% if batt > 60 %}green{% elif batt > 20 %}orange{% else %}red{% endif %}
+                      card_mod:
+                        style: >
+                          ha-card {
+                            --chip-background: rgba(255, 255, 255, 0.05);
+                            --chip-backdrop-filter: blur(16px);
+                            --chip-border-radius: 22px;
+                            --chip-border-width: 1px;
+                            --chip-border-color: rgba(255, 255, 255, 0.07);
+                            --chip-box-shadow: none;
+                            --chip-height: 44px;
+                            width: max-content !important;
+                            padding: 0 !important;
+                          }
+                          .chip-container { align-items: center !important; flex-wrap: nowrap !important; margin: 0 !important; }
+
+                # ── Main 2-Column Grid ──
+                - type: grid
+                  columns: 2
+                  square: false
+                  card_mod:
+                    style: >
+                      #root { align-items: start !important; }
+                      @media (max-width: 800px) { :host { --grid-card-column-count: 1 !important; } }
+                  cards:
+                    # ════════════════════════════
+                    # LEFT COLUMN
+                    # ════════════════════════════
+                    - type: vertical-stack
+                      cards:
+                        # Weather
+                        - type: weather-forecast
+                          entity: weather.forecast_home
+                          show_current: true
+                          show_forecast: true
+                          forecast_type: daily
+                          card_mod:
+                            style: &glass_card |
+                              ha-card {
+                                --ha-card-background: rgba(255, 255, 255, 0.05) !important;
+                                --mush-card-background-color: transparent !important;
+                                --ha-card-box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                                --ha-card-border-width: 0 !important;
+                                background: var(--ha-card-background) !important;
+                                backdrop-filter: blur(16px) !important;
+                                -webkit-backdrop-filter: blur(16px) !important;
+                                border-radius: 24px !important;
+                                border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                                margin-bottom: 8px !important;
+                                overflow: hidden;
+                              }
+                              /* weather-forecast card only — dead selectors elsewhere */
+                              .content { padding: 10px 16px !important; align-items: center !important; }
+                              .icon-image { flex: 0 0 auto !important; }
+                              .icon-image svg, .icon-image img { width: 44px !important; height: 44px !important; }
+                              .name-state .state { font-size: 17px !important; font-weight: 500 !important; line-height: 1.2 !important; }
+                              .temp-attribute .temp { font-size: 19px !important; font-weight: 500 !important; }
+                              .temp-attribute .temp sup { font-size: 11px !important; }
+                              .name-state .name, .temp-attribute .attribute { font-size: 12px !important; opacity: 0.55 !important; }
+                              .forecast.compact { padding-top: 6px !important; }
+                              .forecast-item .temp { font-size: 13px !important; }
+                              .forecast-item .templow { font-size: 12px !important; opacity: 0.55 !important; }
+                              .forecast-item-label { font-size: 11px !important; opacity: 0.6 !important; }
+
+                        # ── Finances Section Header ──
+                        - type: custom:mushroom-template-card
+                          primary: Finances
+                          icon: mdi:cash-multiple
+                          card_mod:
+                            style: &section_header >
+                              ha-card {
+                                background: transparent !important;
+                                background-color: transparent !important;
+                                --ha-card-background: transparent !important;
+                                --mush-card-background-color: transparent !important;
+                                backdrop-filter: none !important;
+                                -webkit-backdrop-filter: none !important;
+                                --ha-card-box-shadow: none !important;
+                                box-shadow: none !important;
+                                --ha-card-border-width: 0 !important;
+                                border: none !important;
+                                padding: 22px 4px 10px 4px !important;
+                                --icon-size: 22px !important;
+                                --icon-color: rgba(255, 255, 255, 0.6) !important;
+                                --shape-color: transparent !important;
+                                --shape-color-disabled: transparent !important;
+                                --card-primary-font-size: 20px !important;
+                                --card-primary-font-weight: 600 !important;
+                                --primary-text-color: rgba(255, 255, 255, 0.95) !important;
+                              }
+                              ha-card::before, ha-card::after { content: none !important; display: none !important; }
+
+                        - type: grid
+                          columns: 2
+                          square: false
+                          card_mod:
+                            style: |
+                              :host { --grid-card-gap: 12px !important; }
+                          cards:
+                            - type: custom:mushroom-template-card
+                              primary: "- ₦{{ '{:,.2f}'.format(states('sensor.sure_spending_current_week') | float(0)) }}"
+                              secondary: "Expenses (week)"
+                              icon: mdi:trending-up
+                              icon_color: red
+                              card_mod:
+                                style: &glass_card_sm >
+                                  ha-card {
+                                    --ha-card-background: rgba(255, 255, 255, 0.04) !important;
+                                    --mush-card-background-color: transparent !important;
+                                    backdrop-filter: blur(16px) !important;
+                                    -webkit-backdrop-filter: blur(16px) !important;
+                                    border-radius: 24px !important;
+                                    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                                    --card-primary-font-size: 16px !important;
+                                    --card-secondary-font-size: 14px !important;
+                                    --card-primary-font-weight: 600 !important;
+                                  }
+                                  ha-card::before, ha-card::after { content: none !important; display: none !important; }
+                                  .container { display: flex; flex-direction: column-reverse; padding: 4px 8px !important; }
+                                  .container .primary { font-size: 26px !important; font-weight: 600 !important; color: white !important; margin-top: 4px !important; }
+                                  .container .secondary { font-size: 13px !important; color: rgba(255, 255, 255, 0.6) !important; }
+                            - type: custom:mushroom-template-card
+                              primary: "- ₦{{ '{:,.2f}'.format(states('sensor.sure_spending_current_month') | float(0)) }}"
+                              secondary: "Expenses (month)"
+                              icon: mdi:trending-up
+                              icon_color: red
+                              card_mod:
+                                style: *glass_card_sm
+                            - type: custom:mushroom-template-card
+                              primary: "+ ₦{{ '{:,.2f}'.format(states('sensor.sure_income_current_month') | float(0)) }}"
+                              secondary: "Income (month)"
+                              icon: mdi:trending-down
+                              icon_color: green
+                              card_mod:
+                                style: *glass_card_sm
+
+                        # ── Energy Costs Section Header ──
+                        - type: custom:mushroom-template-card
+                          primary: Energy Costs
+                          icon: mdi:lightning-bolt
+                          card_mod:
+                            style: *section_header
+
+                        - type: grid
+                          columns: 2
+                          square: false
+                          card_mod:
+                            style: |
+                              :host { --grid-card-gap: 12px !important; }
+                          cards:
+                            - type: custom:mushroom-template-card
+                              primary: "₦{{ '{:,.2f}'.format(states('sensor.lifetime_energy_cost') | float(0)) }}"
+                              secondary: "Lifetime • {{ '{:,.2f}'.format(states('sensor.breaker_total_energy') | float(0)) }} kWh"
+                              icon: mdi:lightning-bolt
+                              icon_color: deep-purple
+                              card_mod:
+                                style: *glass_card_sm
+                            - type: custom:mushroom-template-card
+                              primary: "₦{{ '{:,.2f}'.format(states('sensor.weekly_energy_cost') | float(0)) }}"
+                              secondary: "Week • {{ '{:,.2f}'.format(states('sensor.breaker_energy_weekly') | float(0)) }} kWh"
+                              icon: mdi:lightning-bolt
+                              icon_color: amber
+                              card_mod:
+                                style: *glass_card_sm
+                            - type: custom:mushroom-template-card
+                              primary: "₦{{ '{:,.2f}'.format(states('sensor.monthly_energy_cost') | float(0)) }}"
+                              secondary: "Month • {{ '{:,.2f}'.format(states('sensor.breaker_energy_monthly') | float(0)) }} kWh"
+                              icon: mdi:lightning-bolt
+                              icon_color: amber
+                              card_mod:
+                                style: *glass_card_sm
+
+                        # ── Live Power Consumption ──
+                        - type: custom:mushroom-template-card
+                          primary: Live Power Consumption
+                          icon: mdi:power-plug
+                          card_mod:
+                            style: *section_header
+
+                        - type: grid
+                          columns: 4
+                          square: false
+                          card_mod:
+                            style: |
+                              :host { --grid-card-gap: 8px !important; }
+                          cards:
+                            - type: custom:mushroom-template-card
+                              primary: TV
+                              secondary: "{{ states('sensor.t34_smart_plug_2_tv_power') }} W"
+                              icon: mdi:television
+                              icon_color: blue
+                              layout: vertical
+                              card_mod:
+                                style: *glass_card_sm
+                            - type: custom:mushroom-template-card
+                              primary: Workspace
+                              secondary: "{{ states('sensor.t34_smart_plug_3_workspace_power') }} W"
+                              icon: mdi:desk
+                              icon_color: teal
+                              layout: vertical
+                              card_mod:
+                                style: *glass_card_sm
+                            - type: custom:mushroom-template-card
+                              primary: Fridge
+                              secondary: "{{ states('sensor.t34_smart_plug_4_fridge_power') }} W"
+                              icon: mdi:fridge-outline
+                              icon_color: cyan
+                              layout: vertical
+                              card_mod:
+                                style: *glass_card_sm
+                            - type: custom:mushroom-template-card
+                              primary: Freezer
+                              secondary: "{{ states('sensor.t34_smart_plug_5_freezer_power') }} W"
+                              icon: mdi:snowflake
+                              icon_color: indigo
+                              layout: vertical
+                              card_mod:
+                                style: *glass_card_sm
+                            - type: custom:mushroom-template-card
+                              primary: Kitchen
+                              secondary: "{{ states('sensor.t34_smart_plug_power') }} W"
+                              icon: mdi:power-socket-uk
+                              icon_color: orange
+                              layout: vertical
+                              card_mod:
+                                style: *glass_card_sm
+                            - type: custom:mushroom-template-card
+                              primary: Workspace 2
+                              secondary: "{{ states('sensor.t34_smart_plug_6_power') }} W"
+                              icon: mdi:desk
+                              icon_color: purple
+                              layout: vertical
+                              card_mod:
+                                style: *glass_card_sm
+                            - type: custom:mushroom-template-card
+                              primary: Kitchen 2
+                              secondary: "{{ states('sensor.t34_smart_plug_7_washer_power') }} W"
+                              icon: mdi:power-socket-uk
+                              icon_color: green
+                              layout: vertical
+                              card_mod:
+                                style: *glass_card_sm
+
+                    # RIGHT COLUMN — Rooms
+                    # ════════════════════════════
+                    - type: vertical-stack
+                      card_mod:
+                        style: |
+                          :host {
+                            max-width: 440px !important;
+                            width: 100%;
+                            margin-left: auto !important;
+                            margin-right: auto !important;
+                          }
+                      cards:
+                    # ════════════════════════════
+                        - type: custom:mushroom-template-card
+                          primary: Rooms
+                          icon: mdi:floor-plan
+                          card_mod:
+                            style: *section_header
+
+                        - type: grid
+                          columns: 2
+                          square: false
+                          card_mod:
+                            style: |
+                              :host { --grid-card-gap: 16px !important; }
+                          cards:
+                            # Room tile — name top-left, room icon (circle) flush
+                            # top-right, temp / humidity / light-bulb dropped to the
+                            # bottom-left. Bulb: lit + count when living_room_lights_on > 0,
+                            # else dim outline. Hover glow is warm ONLY when a light is on.
+                            - type: custom:stack-in-card
+                              mode: vertical
+                              card_mod:
+                                style: |
+                                  ha-card {
+                                    --ha-card-background: rgba(255, 255, 255, 0.05) !important;
+                                    border-radius: 24px !important;
+                                    backdrop-filter: blur(16px) !important;
+                                    -webkit-backdrop-filter: blur(16px) !important;
+                                    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                                    overflow: hidden !important;
+                                    position: relative !important;
+                                    height: 226px !important;
+                                    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease !important;
+                                  }
+                                  #root { height: 100% !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; position: relative !important; }
+                                  {% if states('sensor.living_room_lights_on') | int(0) > 0 %}
+                                  ha-card:hover {
+                                    --ha-card-background: rgba(255, 255, 255, 0.12) !important;
+                                    transform: translateY(-3px) !important;
+                                    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24), 0 0 34px rgba(255, 206, 92, 0.34) !important;
+                                    border-top-color: rgba(255, 214, 130, 0.5) !important;
+                                  }
+                                  {% else %}
+                                  ha-card:hover {
+                                    --ha-card-background: rgba(255, 255, 255, 0.09) !important;
+                                    transform: translateY(-2px) !important;
+                                  }
+                                  {% endif %}
+                              cards:
+                                - type: custom:mushroom-template-card
+                                  primary: "Living Room"
+                                  icon: mdi:sofa-outline
+                                  icon_color: grey
+                                  tap_action:
+                                    action: navigate
+                                    navigation_path: /lovelace-yaml/living-room
+                                  card_mod:
+                                    style: |
+                                      ha-card { background: transparent !important; box-shadow: none !important; border: none !important; padding: 16px 16px 0 16px !important; }
+                                      ha-card::before { display: none !important; }
+                                      :host { --card-primary-font-weight: 600; --card-primary-font-size: 22px; }
+                                      .content { flex-direction: row-reverse !important; justify-content: space-between !important; align-items: flex-start !important; width: 100% !important; gap: 10px !important; }
+                                      ha-tile-info { text-align: left !important; padding: 0 !important; }
+                                      ha-tile-info span { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; line-height: 1.2 !important; }
+                                      ha-tile-icon {
+                                        width: 58px !important; height: 58px !important; min-width: 58px !important;
+                                        flex: none !important; margin: 0 !important; padding: 0 !important;
+                                        display: flex !important; align-items: center !important; justify-content: center !important;
+                                        background: rgba(255, 255, 255, 0.13) !important;
+                                        border-radius: 50% !important;
+                                        --tile-icon-color: rgba(255, 255, 255, 0.9) !important;
+                                      }
+                                      ha-tile-icon ha-state-icon { --mdc-icon-size: 30px !important; display: flex !important; }
+                                - type: custom:mushroom-chips-card
+                                  alignment: start
+                                  chips:
+                                    - type: template
+                                      content: >-
+                                        {% set t = states('sensor.living_room_temperature') %}
+                                        {{ (t | float(0) | round(0)) ~ '°' if t not in ['unknown', 'unavailable', 'none'] else '–' }}
+                                      tap_action:
+                                        action: navigate
+                                        navigation_path: /lovelace-yaml/living-room
+                                      card_mod:
+                                        style: |
+                                          ha-card { background: transparent !important; height: auto !important; border: none !important; box-shadow: none !important; min-width: 0 !important; --chip-padding: 0 !important; }
+                                          ha-card::before { display: none !important; }
+                                          .content { padding: 0 !important; }
+                                          .content ::slotted(span) { font-size: 2rem !important; font-weight: 300 !important; line-height: 1 !important; letter-spacing: -0.5px !important; color: rgba(255, 255, 255, 0.82) !important; }
+                                    - type: template
+                                      content: >-
+                                        {% set h = states('sensor.living_room_humidity') %}
+                                        {{ (h | float(0) | round(0)) ~ '%' if h not in ['unknown', 'unavailable', 'none'] else '' }}
+                                      card_mod:
+                                        style: |
+                                          ha-card { background: transparent !important; height: auto !important; border: none !important; box-shadow: none !important; min-width: 0 !important; --chip-padding: 0 !important; }
+                                          ha-card::before { display: none !important; }
+                                          .content { padding: 0 !important; }
+                                          .content ::slotted(span) { font-size: 0.95rem !important; font-weight: 400 !important; opacity: 0.45 !important; }
+                                    - type: template
+                                      icon: >-
+                                        {{ 'mdi:lightbulb' if states('sensor.living_room_lights_on') | int(0) > 0 else 'mdi:lightbulb-outline' }}
+                                      icon_color: >-
+                                        {{ 'amber' if states('sensor.living_room_lights_on') | int(0) > 0 else 'disabled' }}
+                                      content: >-
+                                        {% set n = states('sensor.living_room_lights_on') | int(0) %}
+                                        {{ n if n > 0 else '' }}
+                                      tap_action:
+                                        action: navigate
+                                        navigation_path: /lovelace-yaml/living-room
+                                      card_mod:
+                                        style: |
+                                          ha-card { background: transparent !important; border: none !important; box-shadow: none !important; --mdc-icon-size: 32px !important; min-width: 0 !important; --chip-padding: 0 !important; }
+                                          ha-card::before { display: none !important; }
+                                          .content { padding: 0 !important; gap: 0 !important; }
+                                          .content ::slotted(span) { font-size: 1rem !important; font-weight: 500 !important; opacity: 0.85 !important; margin-left: -1px !important; }
+                                          .content ha-state-icon { --mdc-icon-size: 32px !important; margin-right: -2px !important; }
+                                  card_mod:
+                                    style: |
+                                      ha-card { background: transparent !important; box-shadow: none !important; border: none !important; padding: 0 16px 14px 16px !important; min-height: 150px !important; display: flex !important; align-items: flex-end !important; }
+                                      ha-card::before { display: none !important; }
+                                      :host { --chip-background: transparent; --chip-border-width: 0; --chip-border-color: transparent; --chip-box-shadow: none; }
+                                      .chip-container { align-items: flex-end !important; flex-wrap: nowrap !important; gap: 0 !important; }
+                                      /* temp + humidity = tight pair; bulb = its own pair; real gap between the two groups */
+                                      .chip-container > *:nth-child(2) { margin-left: -4px !important; }
+                                      .chip-container > *:nth-child(3) { margin-left: 9px !important; margin-bottom: 3px !important; }
+                                - type: custom:mushroom-template-card
+                                  tap_action:
+                                    action: navigate
+                                    navigation_path: /lovelace-yaml/living-room
+                                  card_mod:
+                                    style: |
+                                      :host { position: absolute !important; inset: 0 !important; z-index: 4 !important; display: block !important; }
+                                      ha-card { position: absolute !important; inset: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; cursor: pointer !important; }
+                                      ha-card::before, ha-card::after { display: none !important; }
+                            # Room tile — name top-left, room icon (circle) flush
+                            # top-right, temp / humidity / light-bulb dropped to the
+                            # bottom-left. Bulb: lit + count when master_bedroom_lights_on > 0,
+                            # else dim outline. Hover glow is warm ONLY when a light is on.
+                            - type: custom:stack-in-card
+                              mode: vertical
+                              card_mod:
+                                style: |
+                                  ha-card {
+                                    --ha-card-background: rgba(255, 255, 255, 0.05) !important;
+                                    border-radius: 24px !important;
+                                    backdrop-filter: blur(16px) !important;
+                                    -webkit-backdrop-filter: blur(16px) !important;
+                                    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                                    overflow: hidden !important;
+                                    position: relative !important;
+                                    height: 226px !important;
+                                    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease !important;
+                                  }
+                                  #root { height: 100% !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; position: relative !important; }
+                                  {% if states('sensor.master_bedroom_lights_on') | int(0) > 0 %}
+                                  ha-card:hover {
+                                    --ha-card-background: rgba(255, 255, 255, 0.12) !important;
+                                    transform: translateY(-3px) !important;
+                                    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24), 0 0 34px rgba(255, 206, 92, 0.34) !important;
+                                    border-top-color: rgba(255, 214, 130, 0.5) !important;
+                                  }
+                                  {% else %}
+                                  ha-card:hover {
+                                    --ha-card-background: rgba(255, 255, 255, 0.09) !important;
+                                    transform: translateY(-2px) !important;
+                                  }
+                                  {% endif %}
+                              cards:
+                                - type: custom:mushroom-template-card
+                                  primary: "Master Bedroom"
+                                  icon: mdi:bed-king-outline
+                                  icon_color: grey
+                                  tap_action:
+                                    action: navigate
+                                    navigation_path: /lovelace-yaml/master-bedroom
+                                  card_mod:
+                                    style: |
+                                      ha-card { background: transparent !important; box-shadow: none !important; border: none !important; padding: 16px 16px 0 16px !important; }
+                                      ha-card::before { display: none !important; }
+                                      :host { --card-primary-font-weight: 600; --card-primary-font-size: 22px; }
+                                      .content { flex-direction: row-reverse !important; justify-content: space-between !important; align-items: flex-start !important; width: 100% !important; gap: 10px !important; }
+                                      ha-tile-info { text-align: left !important; padding: 0 !important; }
+                                      ha-tile-info span { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; line-height: 1.2 !important; }
+                                      ha-tile-icon {
+                                        width: 58px !important; height: 58px !important; min-width: 58px !important;
+                                        flex: none !important; margin: 0 !important; padding: 0 !important;
+                                        display: flex !important; align-items: center !important; justify-content: center !important;
+                                        background: rgba(255, 255, 255, 0.13) !important;
+                                        border-radius: 50% !important;
+                                        --tile-icon-color: rgba(255, 255, 255, 0.9) !important;
+                                      }
+                                      ha-tile-icon ha-state-icon { --mdc-icon-size: 30px !important; display: flex !important; }
+                                - type: custom:mushroom-chips-card
+                                  alignment: start
+                                  chips:
+                                    - type: template
+                                      content: >-
+                                        {% set t = states('sensor.master_bedroom_temperature') %}
+                                        {{ (t | float(0) | round(0)) ~ '°' if t not in ['unknown', 'unavailable', 'none'] else '–' }}
+                                      tap_action:
+                                        action: navigate
+                                        navigation_path: /lovelace-yaml/master-bedroom
+                                      card_mod:
+                                        style: |
+                                          ha-card { background: transparent !important; height: auto !important; border: none !important; box-shadow: none !important; min-width: 0 !important; --chip-padding: 0 !important; }
+                                          ha-card::before { display: none !important; }
+                                          .content { padding: 0 !important; }
+                                          .content ::slotted(span) { font-size: 2rem !important; font-weight: 300 !important; line-height: 1 !important; letter-spacing: -0.5px !important; color: rgba(255, 255, 255, 0.82) !important; }
+                                    - type: template
+                                      content: >-
+                                        {% set h = states('sensor.master_bedroom_humidity') %}
+                                        {{ (h | float(0) | round(0)) ~ '%' if h not in ['unknown', 'unavailable', 'none'] else '' }}
+                                      card_mod:
+                                        style: |
+                                          ha-card { background: transparent !important; height: auto !important; border: none !important; box-shadow: none !important; min-width: 0 !important; --chip-padding: 0 !important; }
+                                          ha-card::before { display: none !important; }
+                                          .content { padding: 0 !important; }
+                                          .content ::slotted(span) { font-size: 0.95rem !important; font-weight: 400 !important; opacity: 0.45 !important; }
+                                    - type: template
+                                      icon: >-
+                                        {{ 'mdi:lightbulb' if states('sensor.master_bedroom_lights_on') | int(0) > 0 else 'mdi:lightbulb-outline' }}
+                                      icon_color: >-
+                                        {{ 'amber' if states('sensor.master_bedroom_lights_on') | int(0) > 0 else 'disabled' }}
+                                      content: >-
+                                        {% set n = states('sensor.master_bedroom_lights_on') | int(0) %}
+                                        {{ n if n > 0 else '' }}
+                                      tap_action:
+                                        action: navigate
+                                        navigation_path: /lovelace-yaml/master-bedroom
+                                      card_mod:
+                                        style: |
+                                          ha-card { background: transparent !important; border: none !important; box-shadow: none !important; --mdc-icon-size: 32px !important; min-width: 0 !important; --chip-padding: 0 !important; }
+                                          ha-card::before { display: none !important; }
+                                          .content { padding: 0 !important; gap: 0 !important; }
+                                          .content ::slotted(span) { font-size: 1rem !important; font-weight: 500 !important; opacity: 0.85 !important; margin-left: -1px !important; }
+                                          .content ha-state-icon { --mdc-icon-size: 32px !important; margin-right: -2px !important; }
+                                  card_mod:
+                                    style: |
+                                      ha-card { background: transparent !important; box-shadow: none !important; border: none !important; padding: 0 16px 14px 16px !important; min-height: 150px !important; display: flex !important; align-items: flex-end !important; }
+                                      ha-card::before { display: none !important; }
+                                      :host { --chip-background: transparent; --chip-border-width: 0; --chip-border-color: transparent; --chip-box-shadow: none; }
+                                      .chip-container { align-items: flex-end !important; flex-wrap: nowrap !important; gap: 0 !important; }
+                                      /* temp + humidity = tight pair; bulb = its own pair; real gap between the two groups */
+                                      .chip-container > *:nth-child(2) { margin-left: -4px !important; }
+                                      .chip-container > *:nth-child(3) { margin-left: 9px !important; margin-bottom: 3px !important; }
+                                - type: custom:mushroom-template-card
+                                  tap_action:
+                                    action: navigate
+                                    navigation_path: /lovelace-yaml/master-bedroom
+                                  card_mod:
+                                    style: |
+                                      :host { position: absolute !important; inset: 0 !important; z-index: 4 !important; display: block !important; }
+                                      ha-card { position: absolute !important; inset: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; cursor: pointer !important; }
+                                      ha-card::before, ha-card::after { display: none !important; }
+                            # Room tile — name top-left, room icon (circle) flush
+                            # top-right, temp / humidity / light-bulb dropped to the
+                            # bottom-left. Bulb: lit + count when guest_bedroom_lights_on > 0,
+                            # else dim outline. Hover glow is warm ONLY when a light is on.
+                            - type: custom:stack-in-card
+                              mode: vertical
+                              card_mod:
+                                style: |
+                                  ha-card {
+                                    --ha-card-background: rgba(255, 255, 255, 0.05) !important;
+                                    border-radius: 24px !important;
+                                    backdrop-filter: blur(16px) !important;
+                                    -webkit-backdrop-filter: blur(16px) !important;
+                                    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                                    overflow: hidden !important;
+                                    position: relative !important;
+                                    height: 226px !important;
+                                    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease !important;
+                                  }
+                                  #root { height: 100% !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; position: relative !important; }
+                                  {% if states('sensor.guest_bedroom_lights_on') | int(0) > 0 %}
+                                  ha-card:hover {
+                                    --ha-card-background: rgba(255, 255, 255, 0.12) !important;
+                                    transform: translateY(-3px) !important;
+                                    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24), 0 0 34px rgba(255, 206, 92, 0.34) !important;
+                                    border-top-color: rgba(255, 214, 130, 0.5) !important;
+                                  }
+                                  {% else %}
+                                  ha-card:hover {
+                                    --ha-card-background: rgba(255, 255, 255, 0.09) !important;
+                                    transform: translateY(-2px) !important;
+                                  }
+                                  {% endif %}
+                              cards:
+                                - type: custom:mushroom-template-card
+                                  primary: "Guest Bedroom"
+                                  icon: mdi:bed-outline
+                                  icon_color: grey
+                                  tap_action:
+                                    action: navigate
+                                    navigation_path: /lovelace-yaml/guest-bedroom
+                                  card_mod:
+                                    style: |
+                                      ha-card { background: transparent !important; box-shadow: none !important; border: none !important; padding: 16px 16px 0 16px !important; }
+                                      ha-card::before { display: none !important; }
+                                      :host { --card-primary-font-weight: 600; --card-primary-font-size: 22px; }
+                                      .content { flex-direction: row-reverse !important; justify-content: space-between !important; align-items: flex-start !important; width: 100% !important; gap: 10px !important; }
+                                      ha-tile-info { text-align: left !important; padding: 0 !important; }
+                                      ha-tile-info span { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; line-height: 1.2 !important; }
+                                      ha-tile-icon {
+                                        width: 58px !important; height: 58px !important; min-width: 58px !important;
+                                        flex: none !important; margin: 0 !important; padding: 0 !important;
+                                        display: flex !important; align-items: center !important; justify-content: center !important;
+                                        background: rgba(255, 255, 255, 0.13) !important;
+                                        border-radius: 50% !important;
+                                        --tile-icon-color: rgba(255, 255, 255, 0.9) !important;
+                                      }
+                                      ha-tile-icon ha-state-icon { --mdc-icon-size: 30px !important; display: flex !important; }
+                                - type: custom:mushroom-chips-card
+                                  alignment: start
+                                  chips:
+                                    - type: template
+                                      content: >-
+                                        {% set t = states('sensor.guest_bedroom_temperature') %}
+                                        {{ (t | float(0) | round(0)) ~ '°' if t not in ['unknown', 'unavailable', 'none'] else '–' }}
+                                      tap_action:
+                                        action: navigate
+                                        navigation_path: /lovelace-yaml/guest-bedroom
+                                      card_mod:
+                                        style: |
+                                          ha-card { background: transparent !important; height: auto !important; border: none !important; box-shadow: none !important; min-width: 0 !important; --chip-padding: 0 !important; }
+                                          ha-card::before { display: none !important; }
+                                          .content { padding: 0 !important; }
+                                          .content ::slotted(span) { font-size: 2rem !important; font-weight: 300 !important; line-height: 1 !important; letter-spacing: -0.5px !important; color: rgba(255, 255, 255, 0.82) !important; }
+                                    - type: template
+                                      content: >-
+                                        {% set h = states('sensor.guest_bedroom_humidity') %}
+                                        {{ (h | float(0) | round(0)) ~ '%' if h not in ['unknown', 'unavailable', 'none'] else '' }}
+                                      card_mod:
+                                        style: |
+                                          ha-card { background: transparent !important; height: auto !important; border: none !important; box-shadow: none !important; min-width: 0 !important; --chip-padding: 0 !important; }
+                                          ha-card::before { display: none !important; }
+                                          .content { padding: 0 !important; }
+                                          .content ::slotted(span) { font-size: 0.95rem !important; font-weight: 400 !important; opacity: 0.45 !important; }
+                                    - type: template
+                                      icon: >-
+                                        {{ 'mdi:lightbulb' if states('sensor.guest_bedroom_lights_on') | int(0) > 0 else 'mdi:lightbulb-outline' }}
+                                      icon_color: >-
+                                        {{ 'amber' if states('sensor.guest_bedroom_lights_on') | int(0) > 0 else 'disabled' }}
+                                      content: >-
+                                        {% set n = states('sensor.guest_bedroom_lights_on') | int(0) %}
+                                        {{ n if n > 0 else '' }}
+                                      tap_action:
+                                        action: navigate
+                                        navigation_path: /lovelace-yaml/guest-bedroom
+                                      card_mod:
+                                        style: |
+                                          ha-card { background: transparent !important; border: none !important; box-shadow: none !important; --mdc-icon-size: 32px !important; min-width: 0 !important; --chip-padding: 0 !important; }
+                                          ha-card::before { display: none !important; }
+                                          .content { padding: 0 !important; gap: 0 !important; }
+                                          .content ::slotted(span) { font-size: 1rem !important; font-weight: 500 !important; opacity: 0.85 !important; margin-left: -1px !important; }
+                                          .content ha-state-icon { --mdc-icon-size: 32px !important; margin-right: -2px !important; }
+                                  card_mod:
+                                    style: |
+                                      ha-card { background: transparent !important; box-shadow: none !important; border: none !important; padding: 0 16px 14px 16px !important; min-height: 150px !important; display: flex !important; align-items: flex-end !important; }
+                                      ha-card::before { display: none !important; }
+                                      :host { --chip-background: transparent; --chip-border-width: 0; --chip-border-color: transparent; --chip-box-shadow: none; }
+                                      .chip-container { align-items: flex-end !important; flex-wrap: nowrap !important; gap: 0 !important; }
+                                      /* temp + humidity = tight pair; bulb = its own pair; real gap between the two groups */
+                                      .chip-container > *:nth-child(2) { margin-left: -4px !important; }
+                                      .chip-container > *:nth-child(3) { margin-left: 9px !important; margin-bottom: 3px !important; }
+                                - type: custom:mushroom-template-card
+                                  tap_action:
+                                    action: navigate
+                                    navigation_path: /lovelace-yaml/guest-bedroom
+                                  card_mod:
+                                    style: |
+                                      :host { position: absolute !important; inset: 0 !important; z-index: 4 !important; display: block !important; }
+                                      ha-card { position: absolute !important; inset: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; cursor: pointer !important; }
+                                      ha-card::before, ha-card::after { display: none !important; }
+                            # Room tile — name top-left, room icon (circle) flush
+                            # top-right, temp / humidity / light-bulb dropped to the
+                            # bottom-left. Bulb: lit + count when kitchen_lights_on > 0,
+                            # else dim outline. Hover glow is warm ONLY when a light is on.
+                            - type: custom:stack-in-card
+                              mode: vertical
+                              card_mod:
+                                style: |
+                                  ha-card {
+                                    --ha-card-background: rgba(255, 255, 255, 0.05) !important;
+                                    border-radius: 24px !important;
+                                    backdrop-filter: blur(16px) !important;
+                                    -webkit-backdrop-filter: blur(16px) !important;
+                                    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                                    overflow: hidden !important;
+                                    position: relative !important;
+                                    height: 226px !important;
+                                    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease !important;
+                                  }
+                                  #root { height: 100% !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; position: relative !important; }
+                                  {% if states('sensor.kitchen_lights_on') | int(0) > 0 %}
+                                  ha-card:hover {
+                                    --ha-card-background: rgba(255, 255, 255, 0.12) !important;
+                                    transform: translateY(-3px) !important;
+                                    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24), 0 0 34px rgba(255, 206, 92, 0.34) !important;
+                                    border-top-color: rgba(255, 214, 130, 0.5) !important;
+                                  }
+                                  {% else %}
+                                  ha-card:hover {
+                                    --ha-card-background: rgba(255, 255, 255, 0.09) !important;
+                                    transform: translateY(-2px) !important;
+                                  }
+                                  {% endif %}
+                              cards:
+                                - type: custom:mushroom-template-card
+                                  primary: "Kitchen"
+                                  icon: mdi:silverware-fork-knife
+                                  icon_color: grey
+                                  tap_action:
+                                    action: navigate
+                                    navigation_path: /lovelace-yaml/kitchen
+                                  card_mod:
+                                    style: |
+                                      ha-card { background: transparent !important; box-shadow: none !important; border: none !important; padding: 16px 16px 0 16px !important; }
+                                      ha-card::before { display: none !important; }
+                                      :host { --card-primary-font-weight: 600; --card-primary-font-size: 22px; }
+                                      .content { flex-direction: row-reverse !important; justify-content: space-between !important; align-items: flex-start !important; width: 100% !important; gap: 10px !important; }
+                                      ha-tile-info { text-align: left !important; padding: 0 !important; }
+                                      ha-tile-info span { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; line-height: 1.2 !important; }
+                                      ha-tile-icon {
+                                        width: 58px !important; height: 58px !important; min-width: 58px !important;
+                                        flex: none !important; margin: 0 !important; padding: 0 !important;
+                                        display: flex !important; align-items: center !important; justify-content: center !important;
+                                        background: rgba(255, 255, 255, 0.13) !important;
+                                        border-radius: 50% !important;
+                                        --tile-icon-color: rgba(255, 255, 255, 0.9) !important;
+                                      }
+                                      ha-tile-icon ha-state-icon { --mdc-icon-size: 30px !important; display: flex !important; }
+                                - type: custom:mushroom-chips-card
+                                  alignment: start
+                                  chips:
+                                    - type: template
+                                      content: >-
+                                        {% set t = states('sensor.kitchen_temperature') %}
+                                        {{ (t | float(0) | round(0)) ~ '°' if t not in ['unknown', 'unavailable', 'none'] else '–' }}
+                                      tap_action:
+                                        action: navigate
+                                        navigation_path: /lovelace-yaml/kitchen
+                                      card_mod:
+                                        style: |
+                                          ha-card { background: transparent !important; height: auto !important; border: none !important; box-shadow: none !important; min-width: 0 !important; --chip-padding: 0 !important; }
+                                          ha-card::before { display: none !important; }
+                                          .content { padding: 0 !important; }
+                                          .content ::slotted(span) { font-size: 2rem !important; font-weight: 300 !important; line-height: 1 !important; letter-spacing: -0.5px !important; color: rgba(255, 255, 255, 0.82) !important; }
+                                    - type: template
+                                      content: >-
+                                        {% set h = states('sensor.kitchen_humidity') %}
+                                        {{ (h | float(0) | round(0)) ~ '%' if h not in ['unknown', 'unavailable', 'none'] else '' }}
+                                      card_mod:
+                                        style: |
+                                          ha-card { background: transparent !important; height: auto !important; border: none !important; box-shadow: none !important; min-width: 0 !important; --chip-padding: 0 !important; }
+                                          ha-card::before { display: none !important; }
+                                          .content { padding: 0 !important; }
+                                          .content ::slotted(span) { font-size: 0.95rem !important; font-weight: 400 !important; opacity: 0.45 !important; }
+                                    - type: template
+                                      icon: >-
+                                        {{ 'mdi:lightbulb' if states('sensor.kitchen_lights_on') | int(0) > 0 else 'mdi:lightbulb-outline' }}
+                                      icon_color: >-
+                                        {{ 'amber' if states('sensor.kitchen_lights_on') | int(0) > 0 else 'disabled' }}
+                                      content: >-
+                                        {% set n = states('sensor.kitchen_lights_on') | int(0) %}
+                                        {{ n if n > 0 else '' }}
+                                      tap_action:
+                                        action: navigate
+                                        navigation_path: /lovelace-yaml/kitchen
+                                      card_mod:
+                                        style: |
+                                          ha-card { background: transparent !important; border: none !important; box-shadow: none !important; --mdc-icon-size: 32px !important; min-width: 0 !important; --chip-padding: 0 !important; }
+                                          ha-card::before { display: none !important; }
+                                          .content { padding: 0 !important; gap: 0 !important; }
+                                          .content ::slotted(span) { font-size: 1rem !important; font-weight: 500 !important; opacity: 0.85 !important; margin-left: -1px !important; }
+                                          .content ha-state-icon { --mdc-icon-size: 32px !important; margin-right: -2px !important; }
+                                  card_mod:
+                                    style: |
+                                      ha-card { background: transparent !important; box-shadow: none !important; border: none !important; padding: 0 16px 14px 16px !important; min-height: 150px !important; display: flex !important; align-items: flex-end !important; }
+                                      ha-card::before { display: none !important; }
+                                      :host { --chip-background: transparent; --chip-border-width: 0; --chip-border-color: transparent; --chip-box-shadow: none; }
+                                      .chip-container { align-items: flex-end !important; flex-wrap: nowrap !important; gap: 0 !important; }
+                                      /* temp + humidity = tight pair; bulb = its own pair; real gap between the two groups */
+                                      .chip-container > *:nth-child(2) { margin-left: -4px !important; }
+                                      .chip-container > *:nth-child(3) { margin-left: 9px !important; margin-bottom: 3px !important; }
+                                - type: custom:mushroom-template-card
+                                  tap_action:
+                                    action: navigate
+                                    navigation_path: /lovelace-yaml/kitchen
+                                  card_mod:
+                                    style: |
+                                      :host { position: absolute !important; inset: 0 !important; z-index: 4 !important; display: block !important; }
+                                      ha-card { position: absolute !important; inset: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; cursor: pointer !important; }
+                                      ha-card::before, ha-card::after { display: none !important; }
+
+                        # ── System ──
+                        - type: custom:mushroom-template-card
+                          primary: System
+                          icon: mdi:chip
+                          card_mod:
+                            style: *section_header
+
+                        - type: grid
+                          columns: 2
+                          square: false
+                          card_mod:
+                            style: >
+                              :host { --grid-card-gap: 12px !important; margin-bottom: 12px !important; }
+                          cards:
+                            - type: custom:mushroom-entity-card
+                              entity: sensor.system_monitor_processor_use
+                              name: CPU
+                              icon: mdi:cpu-64-bit
+                              card_mod:
+                                style: *glass_card_sm
+                            - type: custom:mushroom-entity-card
+                              entity: sensor.system_monitor_memory_usage
+                              name: Memory
+                              icon: mdi:memory
+                              card_mod:
+                                style: *glass_card_sm
+                            - type: custom:mushroom-entity-card
+                              entity: sensor.backup_backup_manager_state
+                              name: Backups
+                              icon: mdi:cloud-check
+                              card_mod:
+                                style: *glass_card_sm
+                            - type: custom:mushroom-entity-card
+                              entity: update.hacs_update
+                              name: HACS
+                              icon: mdi:package-variant
+                              card_mod:
+                                style: *glass_card_sm
+
+                        - type: grid
+                          columns: 2
+                          square: false
+                          cards:
+                            - type: custom:mushroom-template-card
+                              primary: "Infrastructure"
+                              secondary: "Power & status"
+                              icon: mdi:server-network
+                              icon_color: blue
+                              layout: horizontal
+                              tap_action:
+                                action: navigate
+                                navigation_path: /lovelace-yaml/infrastructure
+                              hold_action:
+                                action: none
+                              card_mod:
+                                style: >
+                                  ha-card {
+                                    --ha-card-background: rgba(255, 255, 255, 0.04) !important;
+                                    --mush-card-background-color: transparent !important;
+                                    --ha-card-box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                                    --ha-card-border-width: 0 !important;
+                                    background: var(--ha-card-background) !important;
+                                    backdrop-filter: blur(16px) !important;
+                                    -webkit-backdrop-filter: blur(16px) !important;
+                                    border-radius: 24px !important;
+                                    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                                  }
+                                  ha-card:active { transform: scale(0.97) !important; }
+                                  .container .primary { font-weight: 600 !important; }
+                                  .container .secondary { opacity: 0.55 !important; }
+                                  ha-card::before, ha-card::after { content: none !important; display: none !important; }
+
+
+
+
+
+  # ══════════════════════════════════════════════
+  # LIVING ROOM SUBVIEW
+  # ══════════════════════════════════════════════
+  - title: Living Room
+    path: living-room
+    icon: mdi:sofa
+    subview: true
+    cards:
+      - type: custom:mod-card
+        card_mod:
+          style: >
+            ha-card {
+              max-width: 900px;
+              margin: 0 auto;
+              padding: 16px;
+              background: transparent !important;
+              border: none !important;
+              box-shadow: none !important;
+            }
+            ha-card::before, ha-card::after { content: none !important; display: none !important; }
+        card:
+          type: vertical-stack
+          cards:
+            # Breadcrumb chips
+            - type: custom:mushroom-chips-card
+              alignment: start
+              chips:
+                - type: template
+                  icon: mdi:home
+                  tap_action:
+                    action: navigate
+                    navigation_path: /lovelace-yaml/home
+                - type: template
+                  icon: mdi:sofa
+                  content: Living Room
+                - type: template
+                  icon: mdi:water-percent
+                  icon_color: blue
+                  content: "{{ states('sensor.living_room_humidity') | int(0) }}%"
+                  card_mod:
+                    style: &env_chip |
+                      ha-card {
+                        --chip-background: rgba(255, 255, 255, 0.04) !important;
+                        --chip-box-shadow: none !important;
+                        --chip-border-width: 0 !important;
+                        --chip-padding: 0 5px !important;
+                        min-width: 0 !important;
+                        border: none !important;
+                        border-top: none !important;
+                      }
+                      ha-card::before, ha-card::after { display: none !important; }
+                - type: template
+                  icon: mdi:thermometer
+                  icon_color: orange
+                  content: "{{ states('sensor.living_room_temperature') | round(1) }}°"
+                  card_mod:
+                    style: *env_chip
+                - type: template
+                  icon: >-
+                    {% set b = states('sensor.living_room_th_battery') %}
+                    {{ 'mdi:battery-alert-variant-outline' if b == 'low' else 'mdi:battery-medium' if b == 'middle' else 'mdi:battery' }}
+                  icon_color: >-
+                    {% set b = states('sensor.living_room_th_battery') %}
+                    {{ 'red' if b == 'low' else 'orange' if b == 'middle' else 'green' }}
+                  tap_action:
+                    action: more-info
+                    entity: sensor.living_room_th_battery
+                  card_mod:
+                    style: *env_chip
+              card_mod:
+                style: &chip_bar >
+                  ha-card {
+                    --chip-background: rgba(255, 255, 255, 0.05);
+                    --chip-backdrop-filter: blur(16px);
+                    --chip-border-radius: 22px;
+                    --chip-border-width: 1px;
+                    --chip-border-color: rgba(255, 255, 255, 0.04);
+                    --chip-box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+                    padding: 0 !important;
+                    margin-bottom: 12px !important;
+                  }
+                  .chip-container { gap: 0 !important; }
+                  .chip-container > *:nth-child(2) { margin-left: 6px !important; }
+                  .chip-container > *:nth-child(3) { margin-left: 8px !important; --chip-border-radius: 22px 0 0 22px !important; }
+                  .chip-container > *:nth-child(4) { --chip-border-radius: 0 !important; }
+                  .chip-container > *:nth-child(5) { --chip-border-radius: 0 22px 22px 0 !important; }
+
+            # ── Cameras ──
+            - type: custom:mushroom-template-card
+              primary: Camera
+              icon: mdi:cctv
+              card_mod:
+                style: &subview_header >
+                  ha-card {
+                    background: transparent !important;
+                    background-color: transparent !important;
+                    --ha-card-background: transparent !important;
+                    --mush-card-background-color: transparent !important;
+                    backdrop-filter: none !important;
+                    -webkit-backdrop-filter: none !important;
+                    --ha-card-box-shadow: none !important;
+                    box-shadow: none !important;
+                    --ha-card-border-width: 0 !important;
+                    border: none !important;
+                    padding: 18px 4px 9px 4px !important;
+                    --icon-size: 21px !important;
+                    --icon-color: rgba(255, 255, 255, 0.55) !important;
+                    --shape-color: transparent !important;
+                    --shape-color-disabled: transparent !important;
+                    --card-primary-font-size: 16px !important;
+                    --card-primary-font-weight: 600 !important;
+                    --primary-text-color: rgba(255, 255, 255, 0.78) !important;
+                  }
+                  ha-card::before, ha-card::after { content: none !important; display: none !important; }
+
+            - type: grid
+              columns: 2
+              square: false
+              card_mod:
+                style: |
+                  :host { --grid-card-gap: 8px !important; }
+              cards:
+                - type: picture-entity
+                  entity: camera.living_room_main
+                  name: Living Room
+                  camera_view: live
+                  show_state: false
+                  show_name: true
+                  tap_action:
+                    action: more-info
+                  card_mod:
+                    style: &subview_card >
+                      ha-card {
+                        --ha-card-background: rgba(255, 255, 255, 0.04) !important;
+                        --mush-card-background-color: transparent !important;
+                        --ha-card-box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                        --ha-card-border-width: 0 !important;
+                        background: var(--ha-card-background) !important;
+                        backdrop-filter: blur(16px) !important;
+                        -webkit-backdrop-filter: blur(16px) !important;
+                        border-radius: 24px !important;
+                        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                        overflow: hidden;
+                      }
+                      .container .secondary { font-weight: 500 !important; }
+                      ha-card::before, ha-card::after { content: none !important; display: none !important; }
+
+                - type: picture-entity
+                  entity: camera.living_room_hall
+                  name: Living Room (Hall)
+                  camera_view: live
+                  show_state: false
+                  show_name: true
+                  tap_action:
+                    action: more-info
+                  card_mod:
+                    style: *subview_card
+
+
+            # ── Lighting ──
+            - type: custom:mushroom-template-card
+              primary: Lighting
+              icon: mdi:ceiling-light-multiple
+              card_mod:
+                style: *subview_header
+
+            - type: grid
+              columns: 4
+              square: true
+              card_mod:
+                style: |
+                  :host { --grid-card-gap: 12px !important; margin-bottom: 24px !important; }
+              cards:
+                - type: custom:mushroom-template-card
+                  entity: switch.light_switch_switch_1
+                  primary: Main L1
+                  icon: mdi:ceiling-light
+                  layout: vertical
+                  icon_color: "{{ 'amber' if is_state(entity, 'on') else 'disabled' }}"
+                  card_mod:
+                    style: |
+                      ha-card {
+                        --ha-card-background: rgba(255, 255, 255, {{ '0.1' if is_state(config.entity, 'on') else '0.04' }}) !important;
+                        --mush-card-background-color: transparent !important;
+                        --ha-card-box-shadow: {{ '0 0 18px rgba(245, 166, 35, 0.28), 0 2px 10px rgba(0, 0, 0, 0.3)' if is_state(config.entity, 'on') else '0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)' }} !important;
+                        background: var(--ha-card-background) !important;
+                        backdrop-filter: blur(16px) !important;
+                        -webkit-backdrop-filter: blur(16px) !important;
+                        border-radius: 24px !important;
+                        border: 1px solid rgba(255, 255, 255, {{ '0.28' if is_state(config.entity, 'on') else '0.06' }}) !important;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                      }
+                      ha-card:active {
+                        transform: scale(0.95);
+                      }
+                      .container .primary { font-weight: 500 !important; font-size: 15px !important; }
+
+                - type: custom:mushroom-template-card
+                  entity: switch.light_switch_switch_2
+                  primary: Main L2
+                  icon: mdi:ceiling-light-outline
+                  layout: vertical
+                  icon_color: "{{ 'amber' if is_state(entity, 'on') else 'disabled' }}"
+                  card_mod:
+                    style: |
+                      ha-card {
+                        --ha-card-background: rgba(255, 255, 255, {{ '0.1' if is_state(config.entity, 'on') else '0.04' }}) !important;
+                        --mush-card-background-color: transparent !important;
+                        --ha-card-box-shadow: {{ '0 0 18px rgba(245, 166, 35, 0.28), 0 2px 10px rgba(0, 0, 0, 0.3)' if is_state(config.entity, 'on') else '0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)' }} !important;
+                        background: var(--ha-card-background) !important;
+                        backdrop-filter: blur(16px) !important;
+                        -webkit-backdrop-filter: blur(16px) !important;
+                        border-radius: 24px !important;
+                        border: 1px solid rgba(255, 255, 255, {{ '0.28' if is_state(config.entity, 'on') else '0.06' }}) !important;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                      }
+                      ha-card:active {
+                        transform: scale(0.95);
+                      }
+                      .container .primary { font-weight: 500 !important; font-size: 15px !important; }
+
+                - type: custom:mushroom-template-card
+                  entity: switch.light_switch_switch_3
+                  primary: Main L3
+                  icon: mdi:track-light
+                  layout: vertical
+                  icon_color: "{{ 'amber' if is_state(entity, 'on') else 'disabled' }}"
+                  card_mod:
+                    style: |
+                      ha-card {
+                        --ha-card-background: rgba(255, 255, 255, {{ '0.1' if is_state(config.entity, 'on') else '0.04' }}) !important;
+                        --mush-card-background-color: transparent !important;
+                        --ha-card-box-shadow: {{ '0 0 18px rgba(245, 166, 35, 0.28), 0 2px 10px rgba(0, 0, 0, 0.3)' if is_state(config.entity, 'on') else '0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)' }} !important;
+                        background: var(--ha-card-background) !important;
+                        backdrop-filter: blur(16px) !important;
+                        -webkit-backdrop-filter: blur(16px) !important;
+                        border-radius: 24px !important;
+                        border: 1px solid rgba(255, 255, 255, {{ '0.28' if is_state(config.entity, 'on') else '0.06' }}) !important;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                      }
+                      ha-card:active {
+                        transform: scale(0.95);
+                      }
+                      .container .primary { font-weight: 500 !important; font-size: 15px !important; }
+
+                - type: custom:mushroom-template-card
+                  entity: switch.light_switch_b_switch_1
+                  primary: Ambient B1
+                  icon: mdi:lamp
+                  layout: vertical
+                  icon_color: "{{ 'amber' if is_state(entity, 'on') else 'disabled' }}"
+                  card_mod:
+                    style: |
+                      ha-card {
+                        --ha-card-background: rgba(255, 255, 255, {{ '0.1' if is_state(config.entity, 'on') else '0.04' }}) !important;
+                        --mush-card-background-color: transparent !important;
+                        --ha-card-box-shadow: {{ '0 0 18px rgba(245, 166, 35, 0.28), 0 2px 10px rgba(0, 0, 0, 0.3)' if is_state(config.entity, 'on') else '0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)' }} !important;
+                        background: var(--ha-card-background) !important;
+                        backdrop-filter: blur(16px) !important;
+                        -webkit-backdrop-filter: blur(16px) !important;
+                        border-radius: 24px !important;
+                        border: 1px solid rgba(255, 255, 255, {{ '0.28' if is_state(config.entity, 'on') else '0.06' }}) !important;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                      }
+                      ha-card:active {
+                        transform: scale(0.95);
+                      }
+                      .container .primary { font-weight: 500 !important; font-size: 15px !important; }
+
+                - type: custom:mushroom-template-card
+                  entity: switch.light_switch_b_switch_2
+                  primary: Ambient B2
+                  icon: mdi:lamp-outline
+                  layout: vertical
+                  icon_color: "{{ 'amber' if is_state(entity, 'on') else 'disabled' }}"
+                  card_mod:
+                    style: |
+                      ha-card {
+                        --ha-card-background: rgba(255, 255, 255, {{ '0.1' if is_state(config.entity, 'on') else '0.04' }}) !important;
+                        --mush-card-background-color: transparent !important;
+                        --ha-card-box-shadow: {{ '0 0 18px rgba(245, 166, 35, 0.28), 0 2px 10px rgba(0, 0, 0, 0.3)' if is_state(config.entity, 'on') else '0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)' }} !important;
+                        background: var(--ha-card-background) !important;
+                        backdrop-filter: blur(16px) !important;
+                        -webkit-backdrop-filter: blur(16px) !important;
+                        border-radius: 24px !important;
+                        border: 1px solid rgba(255, 255, 255, {{ '0.28' if is_state(config.entity, 'on') else '0.06' }}) !important;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                      }
+                      ha-card:active {
+                        transform: scale(0.95);
+                      }
+                      .container .primary { font-weight: 500 !important; font-size: 15px !important; }
+
+                - type: custom:mushroom-template-card
+                  entity: switch.light_switch_b_switch_3
+                  primary: Ambient B3
+                  icon: mdi:wall-sconce
+                  layout: vertical
+                  icon_color: "{{ 'amber' if is_state(entity, 'on') else 'disabled' }}"
+                  card_mod:
+                    style: |
+                      ha-card {
+                        --ha-card-background: rgba(255, 255, 255, {{ '0.1' if is_state(config.entity, 'on') else '0.04' }}) !important;
+                        --mush-card-background-color: transparent !important;
+                        --ha-card-box-shadow: {{ '0 0 18px rgba(245, 166, 35, 0.28), 0 2px 10px rgba(0, 0, 0, 0.3)' if is_state(config.entity, 'on') else '0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)' }} !important;
+                        background: var(--ha-card-background) !important;
+                        backdrop-filter: blur(16px) !important;
+                        -webkit-backdrop-filter: blur(16px) !important;
+                        border-radius: 24px !important;
+                        border: 1px solid rgba(255, 255, 255, {{ '0.28' if is_state(config.entity, 'on') else '0.06' }}) !important;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                      }
+                      ha-card:active {
+                        transform: scale(0.95);
+                      }
+                      .container .primary { font-weight: 500 !important; font-size: 15px !important; }
+
+            # ── Media ──
+            - type: custom:mushroom-template-card
+              primary: Media
+              icon: mdi:television-play
+              card_mod:
+                style: *subview_header
+
+            # Bubble Card media-player, styled to match the dashboard glass theme.
+            # - The state line ("Playing") gets the current app appended after a bold
+            #   dot via a JS-template ::after (Bubble Card has no Jinja). App name is
+            #   sensor.living_room_tv_app (template sensor in configuration.yaml) —
+            #   the universal player doesn't expose app_name for the Jellyfin child.
+            # - Widget icon shows the media artwork automatically whenever the active
+            #   source provides one (Jellyfin poster, YouTube/Spotify/Netflix art);
+            #   falls back to mdi:television when there's none (e.g. Twitch).
+            # - Button order forced to play/pause → volume → power via CSS `order`
+            #   (native DOM order is power, prev, next, volume, play/pause).
+            # - scrolling_effect: true — long titles/artists marquee on one line
+            #   each (keeps the card a fixed 3 lines: title / artist / app). The
+            #   app-name ::after line does NOT scroll, so it's nowrap+ellipsis.
+            - type: custom:bubble-card
+              card_type: media-player
+              entity: media_player.living_room_tv
+              name: 'TCL QLED 55" TV'
+              show_state: true
+              scrolling_effect: true
+              cover_background: true
+              card_layout: large
+              styles: |
+                .bubble-media-player,
+                .bubble-media-player-container {
+                  background: rgba(255, 255, 255, 0.04) !important;
+                  backdrop-filter: blur(16px) !important;
+                  -webkit-backdrop-filter: blur(16px) !important;
+                  border-radius: 24px !important;
+                  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                }
+                .bubble-name { font-weight: 500 !important; }
+                .bubble-state { font-size: 13px !important; opacity: 0.7 !important; }
+                /* title/artist layout is left to Bubble Card so the marquee
+                   (scrolling_effect) can wrap the text in its own container. */
+                .bubble-state::after {
+                  content: "${(() => { const a = (hass.states['sensor.living_room_tv_app'] || {}).state || ''; return (a && !['unknown','unavailable','Off','Home'].includes(a)) ? '\\00a0\\00a0\\2022\\00a0\\00a0' + a : ''; })()}";
+                  font-weight: 700 !important;
+                  opacity: 0.9 !important;
+                  white-space: nowrap !important;
+                }
+                .bubble-media-info-container::after {
+                  content: "${(() => { const attr = (hass.states['media_player.living_room_tv'] || {}).attributes || {}; const app = (hass.states['sensor.living_room_tv_app'] || {}).state || ''; const bad = ['unknown','unavailable','Off','Home','']; const series = (attr.media_series_title || '').trim(); const artist = (attr.media_artist || '').trim(); const title = (attr.media_title || '').trim(); const bits = []; if (series && series !== artist && series !== title) bits.push(series); if (app && !bad.includes(app)) bits.push(app); return bits.join('\\00a0\\00a0\\2022\\00a0\\00a0'); })()}";
+                  font-size: 12px !important;
+                  font-weight: 400 !important;
+                  opacity: 0.6 !important;
+                  margin-top: 2px !important;
+                  display: block !important;
+                  white-space: nowrap !important;
+                  overflow: hidden !important;
+                  text-overflow: ellipsis !important;
+                }
+                .bubble-slider { background: rgba(255, 255, 255, 0.06) !important; }
+                .bubble-buttons-container { display: flex !important; }
+                .bubble-play-pause-button { order: 1 !important; }
+                .bubble-volume-button    { order: 2 !important; }
+                .bubble-power-button     { order: 3 !important; }
+
+            # ── Controls ──
+            - type: custom:mushroom-template-card
+              primary: Controls
+              icon: mdi:tune
+              card_mod:
+                style: *subview_header
+
+            - type: grid
+              columns: 4
+              square: true
+              card_mod:
+                style: |
+                  :host { --grid-card-gap: 12px !important; }
+              cards:
+                - type: custom:mushroom-template-card
+                  entity: switch.ac_switch_switch_1
+                  primary: AC
+                  secondary: "{{ 'Cooling' if is_state(entity, 'on') else 'Off' }}"
+                  icon: mdi:air-conditioner
+                  layout: vertical
+                  icon_color: "{{ 'cyan' if is_state(entity, 'on') else 'disabled' }}"
+                  tap_action:
+                    action: toggle
+                  card_mod:
+                    style: &control_tile |
+                      ha-card {
+                        --ha-card-background: rgba(255, 255, 255, {{ '0.1' if is_state(config.entity, 'on') else '0.04' }}) !important;
+                        --mush-card-background-color: transparent !important;
+                        --ha-card-box-shadow: {{ '0 0 16px rgba(245, 166, 35, 0.22), 0 2px 10px rgba(0, 0, 0, 0.3)' if is_state(config.entity, 'on') else '0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)' }} !important;
+                        background: var(--ha-card-background) !important;
+                        backdrop-filter: blur(16px) !important;
+                        -webkit-backdrop-filter: blur(16px) !important;
+                        border-radius: 24px !important;
+                        border: 1px solid rgba(255, 255, 255, {{ '0.28' if is_state(config.entity, 'on') else '0.06' }}) !important;
+                        --shape-border-radius: 22% !important;
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                      }
+                      ha-card::before, ha-card::after { content: none !important; display: none !important; }
+                      ha-card:active { transform: scale(0.95); }
+                      .container .primary { font-weight: 500 !important; font-size: 13px !important; }
+                      .container .secondary { font-size: 11px !important; opacity: 0.55 !important; margin-top: 1px !important; }
+                - type: custom:mushroom-template-card
+                  entity: switch.t34_smart_plug_2_tv_switch_1
+                  primary: TV
+                  secondary: "{{ states('sensor.t34_smart_plug_2_tv_power') }} W"
+                  icon: mdi:television
+                  layout: vertical
+                  icon_color: "{{ 'blue' if is_state(entity, 'on') else 'disabled' }}"
+                  tap_action:
+                    action: toggle
+                  card_mod:
+                    style: *control_tile
+                - type: custom:mushroom-template-card
+                  entity: switch.t34_smart_plug_3_workspace_switch_1
+                  primary: Workspace
+                  secondary: "{{ states('sensor.t34_smart_plug_3_workspace_power') }} W"
+                  icon: mdi:desk
+                  layout: vertical
+                  icon_color: "{{ 'teal' if is_state(entity, 'on') else 'disabled' }}"
+                  tap_action:
+                    action: toggle
+                  card_mod:
+                    style: *control_tile
+                - type: custom:mushroom-template-card
+                  entity: switch.t34_smart_plug_4_fridge_switch_1
+                  primary: Fridge
+                  secondary: "{{ states('sensor.t34_smart_plug_4_fridge_power') }} W"
+                  icon: mdi:fridge-outline
+                  layout: vertical
+                  icon_color: "{{ 'cyan' if is_state(entity, 'on') else 'disabled' }}"
+                  tap_action:
+                    action: toggle
+                  card_mod:
+                    style: *control_tile
+                - type: custom:mushroom-template-card
+                  entity: switch.t34_smart_plug_5_freezer_switch_1
+                  primary: Freezer
+                  secondary: "{{ states('sensor.t34_smart_plug_5_freezer_power') }} W"
+                  icon: mdi:snowflake
+                  layout: vertical
+                  icon_color: "{{ 'indigo' if is_state(entity, 'on') else 'disabled' }}"
+                  tap_action:
+                    action: toggle
+                  card_mod:
+                    style: *control_tile
+                - type: custom:mushroom-template-card
+                  entity: switch.t34_smart_plug_6_switch_1
+                  primary: Workspace 2
+                  secondary: "{{ states('sensor.t34_smart_plug_6_power') }} W"
+                  icon: mdi:desk
+                  layout: vertical
+                  icon_color: "{{ 'purple' if is_state(entity, 'on') else 'disabled' }}"
+                  tap_action:
+                    action: toggle
+                  card_mod:
+                    style: *control_tile
+            # ── Energy Charts ──
+            - type: custom:mushroom-template-card
+              primary: Energy
+              icon: mdi:flash
+              card_mod:
+                style: *subview_header
+
+            - type: grid
+              columns: 2
+              square: false
+              card_mod:
+                style: >
+                  :host { --grid-card-gap: 12px !important; }
+                  @media (max-width: 800px) { :host { --grid-card-column-count: 1 !important; } }
+              cards:
+                - type: custom:stack-in-card
+                  card_mod:
+                    style: &energy_chart_card >
+                      ha-card {
+                        --ha-card-background: rgba(255, 255, 255, 0.04) !important;
+                        --mush-card-background-color: transparent !important;
+                        --ha-card-box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                        --ha-card-border-width: 0 !important;
+                        background: var(--ha-card-background) !important;
+                        backdrop-filter: blur(16px) !important;
+                        -webkit-backdrop-filter: blur(16px) !important;
+                        border-radius: 24px !important;
+                        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                        padding: 16px !important;
+                        overflow: hidden;
+                      }
+                      ha-card::before, ha-card::after { content: none !important; display: none !important; }
+                  cards:
+                    - type: custom:mushroom-entity-card
+                      entity: sensor.t34_smart_plug_2_tv_total_energy
+                      name: TV
+                      icon: mdi:television
+                      icon_color: blue
+                      card_mod:
+                        style: &energy_inner >
+                          ha-card {
+                            background: transparent !important;
+                            --ha-card-background: transparent !important;
+                            --mush-card-background-color: transparent !important;
+                            border: none !important;
+                            --ha-card-border-width: 0 !important;
+                            box-shadow: none !important;
+                            --ha-card-box-shadow: none !important;
+                            padding: 0 0 8px 0 !important;
+                          }
+                          ha-card::before, ha-card::after { content: none !important; display: none !important; }
+                    - type: custom:mini-graph-card
+                      entities:
+                        - entity: sensor.t34_smart_plug_2_tv_power
+                          color: "#448AFF"
+                      hours_to_show: 24
+                      points_per_hour: 4
+                      line_width: 2
+                      show:
+                        name: false
+                        icon: false
+                        state: false
+                        labels: false
+                        fill: true
+                        points: false
+                      card_mod:
+                        style: &mini_graph >
+                          ha-card {
+                            background: transparent !important;
+                            --ha-card-background: transparent !important;
+                            border: none !important;
+                            --ha-card-border-width: 0 !important;
+                            box-shadow: none !important;
+                            --ha-card-box-shadow: none !important;
+                            padding: 8px 0 !important;
+                          }
+                          ha-card::before, ha-card::after { content: none !important; display: none !important; }
+
+                - type: custom:stack-in-card
+                  card_mod:
+                    style: *energy_chart_card
+                  cards:
+                    - type: custom:mushroom-entity-card
+                      entity: sensor.t34_smart_plug_3_workspace_total_energy
+                      name: Workspace
+                      icon: mdi:desk
+                      icon_color: teal
+                      card_mod:
+                        style: *energy_inner
+                    - type: custom:mini-graph-card
+                      entities:
+                        - entity: sensor.t34_smart_plug_3_workspace_power
+                          color: "#26A69A"
+                      hours_to_show: 24
+                      points_per_hour: 4
+                      line_width: 2
+                      show:
+                        name: false
+                        icon: false
+                        state: false
+                        labels: false
+                        fill: true
+                        points: false
+                      card_mod:
+                        style: *mini_graph
+
+                - type: custom:stack-in-card
+                  card_mod:
+                    style: *energy_chart_card
+                  cards:
+                    - type: custom:mushroom-entity-card
+                      entity: sensor.t34_smart_plug_4_fridge_total_energy
+                      name: Fridge
+                      icon: mdi:fridge-outline
+                      icon_color: cyan
+                      card_mod:
+                        style: *energy_inner
+                    - type: custom:mini-graph-card
+                      entities:
+                        - entity: sensor.t34_smart_plug_4_fridge_power
+                          color: "#00BCD4"
+                      hours_to_show: 24
+                      points_per_hour: 4
+                      line_width: 2
+                      show:
+                        name: false
+                        icon: false
+                        state: false
+                        labels: false
+                        fill: true
+                        points: false
+                      card_mod:
+                        style: *mini_graph
+
+                - type: custom:stack-in-card
+                  card_mod:
+                    style: *energy_chart_card
+                  cards:
+                    - type: custom:mushroom-entity-card
+                      entity: sensor.t34_smart_plug_5_freezer_total_energy
+                      name: Freezer
+                      icon: mdi:snowflake
+                      icon_color: indigo
+                      card_mod:
+                        style: *energy_inner
+                    - type: custom:mini-graph-card
+                      entities:
+                        - entity: sensor.t34_smart_plug_5_freezer_power
+                          color: "#7986CB"
+                      hours_to_show: 24
+                      points_per_hour: 4
+                      line_width: 2
+                      show:
+                        name: false
+                        icon: false
+                        state: false
+                        labels: false
+                        fill: true
+                        points: false
+                      card_mod:
+                        style: *mini_graph
+
+                - type: custom:stack-in-card
+                  card_mod:
+                    style: *energy_chart_card
+                  cards:
+                    - type: custom:mushroom-entity-card
+                      entity: sensor.t34_smart_plug_6_total_energy
+                      name: Workspace 2
+                      icon: mdi:desk
+                      icon_color: purple
+                      card_mod:
+                        style: *energy_inner
+                    - type: custom:mini-graph-card
+                      entities:
+                        - entity: sensor.t34_smart_plug_6_power
+                          color: "#AB47BC"
+                      hours_to_show: 24
+                      points_per_hour: 4
+                      line_width: 2
+                      show:
+                        name: false
+                        icon: false
+                        state: false
+                        labels: false
+                        fill: true
+                        points: false
+                      card_mod:
+                        style: *mini_graph
+
+  # ══════════════════════════════════════════════
+  # MASTER BEDROOM SUBVIEW
+  # ══════════════════════════════════════════════
+  - title: Master Bedroom
+    path: master-bedroom
+    icon: mdi:bed-king
+    subview: true
+    cards:
+      - type: custom:mod-card
+        card_mod:
+          style: >
+            ha-card {
+              max-width: 900px;
+              margin: 0 auto;
+              padding: 4px 16px 24px 16px !important;
+              background: transparent !important;
+              border: none !important;
+              box-shadow: none !important;
+            }
+            ha-card::before, ha-card::after { content: none !important; display: none !important; }
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:mushroom-chips-card
+              alignment: start
+              chips:
+                - type: template
+                  icon: mdi:home
+                  tap_action:
+                    action: navigate
+                    navigation_path: /lovelace-yaml/home
+                - type: template
+                  icon: mdi:bed-king
+                  content: Master Bedroom
+                - type: template
+                  icon: mdi:water-percent
+                  icon_color: blue
+                  content: "{{ states('sensor.master_bedroom_humidity') | int(0) }}%"
+                  card_mod:
+                    style: *env_chip
+                - type: template
+                  icon: mdi:thermometer
+                  icon_color: orange
+                  content: "{{ states('sensor.master_bedroom_temperature') | round(1) }}°"
+                  card_mod:
+                    style: *env_chip
+                - type: template
+                  icon: >-
+                    {% set b = states('sensor.master_bedroom_th_battery') %}
+                    {{ 'mdi:battery-alert-variant-outline' if b == 'low' else 'mdi:battery-medium' if b == 'middle' else 'mdi:battery' }}
+                  icon_color: >-
+                    {% set b = states('sensor.master_bedroom_th_battery') %}
+                    {{ 'red' if b == 'low' else 'orange' if b == 'middle' else 'green' }}
+                  tap_action:
+                    action: more-info
+                    entity: sensor.master_bedroom_th_battery
+                  card_mod:
+                    style: *env_chip
+              card_mod:
+                style: *chip_bar
+
+            # ── Controls ──
+            - type: custom:mushroom-template-card
+              primary: Controls
+              icon: mdi:tune
+              card_mod:
+                style: *subview_header
+
+            - type: grid
+              columns: 3
+              square: true
+              card_mod:
+                style: |
+                  :host { --grid-card-gap: 12px !important; }
+              cards:
+                - type: custom:mushroom-template-card
+                  entity: switch.ac_switch_switch_1_3
+                  primary: AC
+                  secondary: "{{ 'Cooling' if is_state(entity, 'on') else 'Off' }}"
+                  icon: mdi:air-conditioner
+                  layout: vertical
+                  icon_color: "{{ 'cyan' if is_state(entity, 'on') else 'disabled' }}"
+                  tap_action:
+                    action: toggle
+                  card_mod:
+                    style: *control_tile
+
+
+  # ══════════════════════════════════════════════
+  # GUEST BEDROOM SUBVIEW
+  # ══════════════════════════════════════════════
+  - title: Guest Bedroom
+    path: guest-bedroom
+    icon: mdi:bed
+    subview: true
+    cards:
+      - type: custom:mod-card
+        card_mod:
+          style: >
+            ha-card {
+              max-width: 900px;
+              margin: 0 auto;
+              padding: 4px 16px 24px 16px !important;
+              background: transparent !important;
+              border: none !important;
+              box-shadow: none !important;
+            }
+            ha-card::before, ha-card::after { content: none !important; display: none !important; }
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:mushroom-chips-card
+              alignment: start
+              chips:
+                - type: template
+                  icon: mdi:home
+                  tap_action:
+                    action: navigate
+                    navigation_path: /lovelace-yaml/home
+                - type: template
+                  icon: mdi:bed
+                  content: Guest Bedroom
+                - type: template
+                  icon: mdi:water-percent
+                  icon_color: blue
+                  content: "{{ states('sensor.guest_bedroom_humidity') | int(0) }}%"
+                  card_mod:
+                    style: *env_chip
+                - type: template
+                  icon: mdi:thermometer
+                  icon_color: orange
+                  content: "{{ states('sensor.guest_bedroom_temperature') | round(1) }}°"
+                  card_mod:
+                    style: *env_chip
+                - type: template
+                  icon: >-
+                    {% set b = states('sensor.guest_bedroom_th_battery') %}
+                    {{ 'mdi:battery-alert-variant-outline' if b == 'low' else 'mdi:battery-medium' if b == 'middle' else 'mdi:battery' }}
+                  icon_color: >-
+                    {% set b = states('sensor.guest_bedroom_th_battery') %}
+                    {{ 'red' if b == 'low' else 'orange' if b == 'middle' else 'green' }}
+                  tap_action:
+                    action: more-info
+                    entity: sensor.guest_bedroom_th_battery
+                  card_mod:
+                    style: *env_chip
+              card_mod:
+                style: *chip_bar
+
+            # ── Controls ──
+            - type: custom:mushroom-template-card
+              primary: Controls
+              icon: mdi:tune
+              card_mod:
+                style: *subview_header
+
+            - type: grid
+              columns: 3
+              square: true
+              card_mod:
+                style: |
+                  :host { --grid-card-gap: 12px !important; }
+              cards:
+                - type: custom:mushroom-template-card
+                  entity: switch.ac_switch_switch_1_2
+                  primary: AC
+                  secondary: "{{ 'Cooling' if is_state(entity, 'on') else 'Off' }}"
+                  icon: mdi:air-conditioner
+                  layout: vertical
+                  icon_color: "{{ 'cyan' if is_state(entity, 'on') else 'disabled' }}"
+                  tap_action:
+                    action: toggle
+                  card_mod:
+                    style: *control_tile
+
+
+  # ══════════════════════════════════════════════
+  # KITCHEN SUBVIEW
+  # ══════════════════════════════════════════════
+  - title: Kitchen
+    path: kitchen
+    icon: mdi:countertop
+    subview: true
+    cards:
+      - type: custom:mod-card
+        card_mod:
+          style: >
+            ha-card {
+              max-width: 900px;
+              margin: 0 auto;
+              padding: 16px;
+              background: transparent !important;
+              border: none !important;
+              box-shadow: none !important;
+            }
+            ha-card::before, ha-card::after { content: none !important; display: none !important; }
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:mushroom-chips-card
+              alignment: start
+              chips:
+                - type: template
+                  icon: mdi:home
+                  tap_action:
+                    action: navigate
+                    navigation_path: /lovelace-yaml/home
+                - type: template
+                  icon: mdi:countertop
+                  content: Kitchen
+                - type: template
+                  icon: mdi:water-percent
+                  icon_color: blue
+                  content: "{{ states('sensor.kitchen_humidity') | int(0) }}%"
+                  card_mod:
+                    style: *env_chip
+                - type: template
+                  icon: mdi:thermometer
+                  icon_color: orange
+                  content: "{{ states('sensor.kitchen_temperature') | round(1) }}°"
+                  card_mod:
+                    style: *env_chip
+                - type: template
+                  icon: >-
+                    {% set b = states('sensor.kitchen_th_battery') %}
+                    {{ 'mdi:battery-alert-variant-outline' if b == 'low' else 'mdi:battery-medium' if b == 'middle' else 'mdi:battery' }}
+                  icon_color: >-
+                    {% set b = states('sensor.kitchen_th_battery') %}
+                    {{ 'red' if b == 'low' else 'orange' if b == 'middle' else 'green' }}
+                  tap_action:
+                    action: more-info
+                    entity: sensor.kitchen_th_battery
+                  card_mod:
+                    style: *env_chip
+              card_mod:
+                style: *chip_bar
+
+            # ── Controls ──
+            - type: custom:mushroom-template-card
+              primary: Controls
+              icon: mdi:tune
+              card_mod:
+                style: *subview_header
+
+            - type: grid
+              columns: 3
+              square: true
+              card_mod:
+                style: |
+                  :host { --grid-card-gap: 12px !important; }
+              cards:
+                - type: custom:mushroom-template-card
+                  entity: switch.t34_smart_plug_switch_1
+                  primary: Socket
+                  secondary: "{{ states('sensor.t34_smart_plug_power') }} W"
+                  icon: mdi:power-socket-uk
+                  layout: vertical
+                  icon_color: "{{ 'orange' if is_state(entity, 'on') else 'disabled' }}"
+                  tap_action:
+                    action: toggle
+                  card_mod:
+                    style: *control_tile
+                - type: custom:mushroom-template-card
+                  entity: switch.t34_smart_plug_7_washer_switch_1
+                  primary: Socket 2
+                  secondary: "{{ states('sensor.t34_smart_plug_7_washer_power') }} W"
+                  icon: mdi:power-socket-uk
+                  layout: vertical
+                  icon_color: "{{ 'green' if is_state(entity, 'on') else 'disabled' }}"
+                  tap_action:
+                    action: toggle
+                  card_mod:
+                    style: *control_tile
+            # ── Appliances (Washer) ──
+            - type: custom:mushroom-template-card
+              primary: Appliances
+              icon: mdi:washing-machine
+              card_mod:
+                style: *subview_header
+
+            - type: custom:bubble-card
+              card_type: button
+              button_type: state
+              card_layout: large-2-rows
+              entity: sensor.washer_current_status
+              name: Washer
+              icon: mdi:washing-machine
+              show_state: true
+              show_last_changed: false
+              show_attribute: false
+              styles: |
+                .bubble-button-card-container {
+                  background: rgba(255, 255, 255, 0.04) !important;
+                  backdrop-filter: blur(16px) !important;
+                  -webkit-backdrop-filter: blur(16px) !important;
+                  border-radius: 25px !important;
+                  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                  position: relative !important;
+                  overflow: hidden !important;
+                }
+                .bubble-icon {
+                  transform-origin: 50% 50% !important;
+                  ${
+                    (() => {
+                      /* Washer icon: motion vocabulary per cycle phase (A),
+                         speed scaled by the plug's live wattage (C). */
+                      const st = (hass.states['sensor.washer_current_status'] || {}).state || 'unknown';
+                      const pw = parseFloat((hass.states['sensor.t34_smart_plug_7_washer_power'] || {}).state) || 0;
+                      const v = st.toLowerCase();
+                      const grp = ({
+                        detecting:'think', reserved:'think',
+                        running:'wash', steam_softening:'wash', refreshing:'wash',
+                        rinsing:'rinse', rinse_hold:'rinse',
+                        spinning:'spin',
+                        drying:'dry', cool_down:'dry',
+                        pause:'pause', end:'done', error:'error'
+                      })[v] || 'idle';
+                      const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+                      const washN = clamp(1.5 - pw/350, 0.55, 1.6);
+                      const spinN = clamp(2.2 - pw/300, 0.40, 2.2);
+                      const M = {
+                        idle:  ['rgba(255,255,255,0.28)', 'none'],
+                        think: ['#90A4AE', 'washerBreathe 2.4s ease-in-out infinite'],
+                        wash:  ['#26A69A', 'washerAgitate ' + washN.toFixed(2) + 's ease-in-out infinite'],
+                        rinse: ['#448AFF', 'washerAgitate ' + (washN*1.35).toFixed(2) + 's ease-in-out infinite'],
+                        spin:  ['#E8EAF6', 'washerSpin ' + spinN.toFixed(2) + 's linear infinite'],
+                        dry:   ['#FFA726', 'washerSpin 1.40s linear infinite'],
+                        pause: ['#FFB74D', 'washerBreathe 2.8s ease-in-out infinite'],
+                        done:  ['#66BB6A', 'washerDone 0.7s ease-out 1'],
+                        error: ['#EF5350', 'washerShake 0.5s ease-in-out 3']
+                      };
+                      const c = M[grp];
+                      return 'color: ' + c[0] + ' !important; animation: ' + c[1] + ' !important;';
+                    })()
+                  }
+                }
+                @keyframes washerAgitate { 0%,100% { transform: rotate(-11deg); } 50% { transform: rotate(11deg); } }
+                @keyframes washerSpin { to { transform: rotate(360deg); } }
+                @keyframes washerBreathe { 0%,100% { transform: scale(0.92); opacity: 0.62; } 50% { transform: scale(1.06); opacity: 1; } }
+                @keyframes washerDone { 0% { transform: scale(1); } 35% { transform: scale(1.22); } 65% { transform: scale(0.94); } 100% { transform: scale(1); } }
+                @keyframes washerShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-2px); } }
+                .bubble-name { font-weight: 500 !important; }
+                .bubble-state { font-size: 13px !important; opacity: 0.7 !important; }
+                .bubble-button-card-container::after {
+                  content: '' !important;
+                  display: block !important;
+                  position: absolute !important;
+                  top: 0 !important;
+                  left: 0 !important;
+                  height: 100% !important;
+                  ${
+                    (() => {
+                      const status = hass.states['sensor.washer_current_status'];
+                      const total = hass.states['sensor.washer_total_time'];
+                      const endTime = hass.states['sensor.washer_remaining_time'];
+                      if (!status || !total || !endTime) return 'width: 0%; background: transparent;';
+                      const v = status.state.toLowerCase();
+                      const idle = ['off','-','unknown','unavailable','idle','standby','sleep','end','complete','pause','error'];
+                      const t = parseFloat(total.state) || 0;
+                      if (idle.includes(v) || t <= 0) return 'width: 0%; background: transparent;';
+                      const end = new Date(endTime.state);
+                      const now = new Date();
+                      const remainMin = Math.max(0, (end - now) / 60000);
+                      const pct = Math.min(((t - remainMin) / t) * 100, 100).toFixed(1);
+                      return 'width: ' + pct + '%; background: linear-gradient(90deg, rgba(33,150,243,0.35) 0%, rgba(33,150,243,0.12) 100%);';
+                    })()
+                  }
+                  border-radius: 25px !important;
+                  z-index: 0 !important;
+                  transition: width 60s linear !important;
+                  pointer-events: none !important;
+                }
+                .bubble-sub-button-container {
+                  margin-left: auto !important;
+                  margin-right: 16px !important;
+                  width: auto !important;
+                  z-index: 2 !important;
+                }
+                .bubble-sub-button-1 { margin: 0 !important; }
+              sub_button:
+                - entity: sensor.washer_remaining_minutes
+                  icon: mdi:timer-outline
+                  show_background: false
+                  show_state: true
+                  tap_action:
+                    action: more-info
+
+            # ── Energy Monitoring ──
+            - type: custom:mushroom-template-card
+              primary: Energy Monitoring
+              icon: mdi:flash
+              card_mod:
+                style: *subview_header
+
+            - type: grid
+              columns: 2
+              square: false
+              card_mod:
+                style: >
+                  :host { --grid-card-gap: 12px !important; }
+                  @media (max-width: 800px) { :host { --grid-card-column-count: 1 !important; } }
+              cards:
+                - type: custom:stack-in-card
+                  card_mod:
+                    style: >
+                      ha-card {
+                        --ha-card-background: rgba(255, 255, 255, 0.04) !important;
+                        --mush-card-background-color: transparent !important;
+                        --ha-card-box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                        --ha-card-border-width: 0 !important;
+                        background: var(--ha-card-background) !important;
+                        backdrop-filter: blur(16px) !important;
+                        -webkit-backdrop-filter: blur(16px) !important;
+                        border-radius: 24px !important;
+                        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                        padding: 16px !important;
+                        overflow: hidden;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        justify-content: space-between !important;
+                        height: 100% !important;
+                      }
+                      ha-card::before, ha-card::after { content: none !important; display: none !important; }
+                  cards:
+                    - type: custom:mushroom-entity-card
+                      entity: sensor.t34_smart_plug_total_energy
+                      name: Socket
+                      icon: mdi:power-socket-uk
+                      icon_color: orange
+                      card_mod:
+                        style: *energy_inner
+                    - type: custom:mini-graph-card
+                      entities:
+                        - entity: sensor.t34_smart_plug_power
+                          color: "#FF9800"
+                      hours_to_show: 24
+                      points_per_hour: 4
+                      line_width: 2
+                      show:
+                        name: false
+                        icon: false
+                        state: false
+                        labels: false
+                        fill: true
+                        points: false
+                      card_mod:
+                        style: *mini_graph
+
+                - type: custom:stack-in-card
+                  card_mod:
+                    style: *energy_chart_card
+                  cards:
+                    - type: custom:mushroom-entity-card
+                      entity: sensor.t34_smart_plug_7_washer_total_energy
+                      name: Socket (Washer)
+                      icon: mdi:washing-machine
+                      icon_color: blue
+                      card_mod:
+                        style: *energy_inner
+                    - type: custom:mini-graph-card
+                      entities:
+                        - entity: sensor.t34_smart_plug_7_washer_power
+                          color: "#448AFF"
+                      hours_to_show: 24
+                      points_per_hour: 4
+                      line_width: 2
+                      show:
+                        name: false
+                        icon: false
+                        state: false
+                        labels: false
+                        fill: true
+                        points: false
+                      card_mod:
+                        style: *mini_graph
+
+  # ══════════════════════════════════════════════
+  # CAMERAS SUBVIEW
+  # ══════════════════════════════════════════════
+  - title: Cameras
+    path: cameras
+    icon: mdi:cctv
+    subview: true
+    cards:
+      - type: custom:mod-card
+        card_mod:
+          style: >
+            ha-card {
+              max-width: 900px;
+              margin: 0 auto;
+              padding: 16px;
+              background: transparent !important;
+              border: none !important;
+              box-shadow: none !important;
+            }
+            ha-card::before, ha-card::after { content: none !important; display: none !important; }
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:mushroom-chips-card
+              alignment: start
+              chips:
+                - type: template
+                  icon: mdi:home
+                  tap_action:
+                    action: navigate
+                    navigation_path: /lovelace-yaml/home
+                - type: template
+                  icon: mdi:cctv
+                  content: Cameras
+              card_mod:
+                style: *chip_bar
+
+            - type: custom:mushroom-template-card
+              primary: All Cameras
+              icon: mdi:cctv
+              card_mod:
+                style: *subview_header
+
+            - type: grid
+              columns: 2
+              square: false
+              card_mod:
+                style: |
+                  :host { --grid-card-gap: 8px !important; }
+              cards:
+                - type: picture-entity
+                  entity: camera.living_room_main
+                  name: Living Room
+                  camera_view: live
+                  show_state: false
+                  show_name: true
+                  tap_action:
+                    action: more-info
+                  card_mod:
+                    style: *subview_card
+                - type: picture-entity
+                  entity: camera.living_room_hall
+                  name: Living Room (Hall)
+                  camera_view: live
+                  show_state: false
+                  show_name: true
+                  tap_action:
+                    action: more-info
+                  card_mod:
+                    style: *subview_card
+
+
+  # ══════════════════════════════════════════════
+  # INFRASTRUCTURE SUBVIEW
+  # ══════════════════════════════════════════════
+  - title: Infrastructure
+    path: infrastructure
+    icon: mdi:server-network
+    subview: true
+    cards:
+      - type: custom:mod-card
+        card_mod:
+          style: >
+            ha-card {
+              max-width: 900px;
+              margin: 0 auto;
+              padding: 16px;
+              background: transparent !important;
+              border: none !important;
+              box-shadow: none !important;
+            }
+            ha-card::before, ha-card::after { content: none !important; display: none !important; }
+        card:
+          type: vertical-stack
+          cards:
+            # Breadcrumb
+            - type: custom:mushroom-chips-card
+              alignment: start
+              chips:
+                - type: template
+                  icon: mdi:home
+                  tap_action:
+                    action: navigate
+                    navigation_path: /lovelace-yaml/home
+                - type: template
+                  icon: mdi:server-network
+                  content: Infrastructure
+              card_mod:
+                style: *chip_bar
+
+            # ── Hosts header + Shutdown All (compact power button, same row) ──
+            - type: horizontal-stack
+              card_mod:
+                style: |
+                  :host { width: 100% !important; }
+                  #root {
+                    display: flex !important;
+                    width: 100% !important;
+                    align-items: center !important;
+                    gap: 8px !important;
+                  }
+                  #root > hui-card { display: contents !important; }
+                  #root > hui-card:first-child > * { flex: 1 1 auto !important; }
+                  #root > hui-card:last-child > * { flex: 0 0 auto !important; }
+              cards:
+                - type: custom:mushroom-template-card
+                  primary: Hosts
+                  icon: mdi:server
+                  card_mod:
+                    style: *subview_header
+                - type: custom:mushroom-template-card
+                  icon: mdi:power
+                  icon_color: red
+                  layout: vertical
+                  tap_action:
+                    action: none
+                  double_tap_action:
+                    action: call-service
+                    service: shell_command.super_power_button
+                    confirmation:
+                      text: "⚠️ DANGER: Shut down the entire homelab (all hosts)?"
+                  hold_action:
+                    action: none
+                  card_mod:
+                    style: >
+                      ha-card {
+                        --ha-card-background: rgba(234, 67, 53, 0.12) !important;
+                        --mush-card-background-color: transparent !important;
+                        --ha-card-box-shadow: 0 0 14px rgba(234, 67, 53, 0.15) !important;
+                        --ha-card-border-width: 0 !important;
+                        background: var(--ha-card-background) !important;
+                        border-radius: 999px !important;
+                        border: 2px solid rgba(234, 67, 53, 0.4) !important;
+                        width: 44px !important;
+                        height: 44px !important;
+                        min-height: 44px !important;
+                        min-width: 44px !important;
+                        padding: 0 !important;
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        flex: 0 0 auto !important;
+                      }
+                      ha-card:active { transform: scale(0.92) !important; }
+                      .container { padding: 0 !important; gap: 0 !important; min-height: unset !important; }
+                      ha-card::before, ha-card::after { content: none !important; display: none !important; }
+
+            # ── Device tiles (each: main tile + top-right Reboot/Shutdown overlay) ──
+            - type: grid
+              columns: 3
+              square: false
+              card_mod:
+                style: |
+                  :host { --grid-card-gap: 14px !important; }
+              cards:
+                # fw-01
+                - type: vertical-stack
+                  card_mod:
+                    style: |
+                      #root { position: relative !important; gap: 0 !important; }
+                      #root > hui-card { display: contents !important; }
+                  cards:
+                    - type: custom:mushroom-template-card
+                      primary: "fw-01"
+                      secondary: "{{ 'Online' if is_state('binary_sensor.fw_01_online', 'on') else 'Offline' }}"
+                      icon: mdi:router-network
+                      icon_color: "{{ 'green' if is_state('binary_sensor.fw_01_online', 'on') else 'amber' }}"
+                      layout: vertical
+                      tap_action:
+                        action: more-info
+                        entity: binary_sensor.fw_01_online
+                      card_mod:
+                        style: &host_tile >
+                          ha-card {
+                            --ha-card-background: rgba(255, 255, 255, 0.04) !important;
+                            --mush-card-background-color: transparent !important;
+                            --ha-card-box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                            --ha-card-border-width: 0 !important;
+                            background: var(--ha-card-background) !important;
+                            backdrop-filter: blur(16px) !important;
+                            -webkit-backdrop-filter: blur(16px) !important;
+                            border-radius: 22px !important;
+                            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+                            padding: 48px 12px 22px 12px !important;
+                            min-height: 158px !important;
+                            --icon-size: 46px !important;
+                            --shape-size: 64px !important;
+                            --card-primary-font-size: 17px !important;
+                            --card-primary-font-weight: 600 !important;
+                            --card-secondary-font-size: 13px !important;
+                          }
+                          ha-card::before, ha-card::after { content: none !important; display: none !important; }
+                    - type: horizontal-stack
+                      card_mod:
+                        style: &host_action_pos |
+                          :host {
+                            position: absolute !important;
+                            top: 10px !important;
+                            right: 10px !important;
+                            left: auto !important;
+                            width: auto !important;
+                            z-index: 3 !important;
+                          }
+                          #root { display: flex !important; gap: 4px !important; }
+                          #root > hui-card { display: contents !important; }
+                      cards:
+                        - type: custom:button-card
+                          icon: mdi:restart
+                          show_name: false
+                          show_label: false
+                          show_state: false
+                          size: 12px
+                          color: orange
+                          tap_action:
+                            action: none
+                          double_tap_action:
+                            action: call-service
+                            service: shell_command.host_power_control
+                            service_data:
+                              host: fw-01
+                              action: reboot
+                            confirmation:
+                              text: "Reboot fw-01 (firewall/router — will briefly drop network)?"
+                          hold_action:
+                            action: none
+                          styles: &mini_btn_style
+                            grid:
+                              - grid-template-areas: '"i"'
+                              - grid-template-columns: 1fr
+                              - grid-template-rows: 1fr
+                            card:
+                              - background: transparent
+                              - box-shadow: none
+                              - border: none
+                              - width: 20px
+                              - height: 20px
+                              - padding: 0
+                              - opacity: 0.55
+                            icon:
+                              - width: 14px
+                        - type: custom:button-card
+                          icon: mdi:power
+                          show_name: false
+                          show_label: false
+                          show_state: false
+                          size: 12px
+                          color: red
+                          tap_action:
+                            action: none
+                          double_tap_action:
+                            action: call-service
+                            service: shell_command.host_power_control
+                            service_data:
+                              host: fw-01
+                              action: shutdown
+                            confirmation:
+                              text: "⚠️ Shut down fw-01 (firewall/router — will take the network down)?"
+                          hold_action:
+                            action: none
+                          styles: *mini_btn_style
+
+                # core-01 (self — CPU/Mem shown with dedicated icons, no ping needed)
+                - type: vertical-stack
+                  card_mod:
+                    style: |
+                      #root { position: relative !important; gap: 0 !important; }
+                      #root > hui-card { display: contents !important; }
+                  cards:
+                    - type: custom:mod-card
+                      card_mod:
+                        style: *host_tile
+                      card:
+                        type: vertical-stack
+                        card_mod:
+                          style: |
+                            #root { gap: 4px !important; }
+                            #root > hui-card { display: contents !important; }
+                        cards:
+                          - type: custom:mushroom-template-card
+                            primary: "core-01"
+                            icon: mdi:raspberry-pi
+                            icon_color: blue
+                            layout: vertical
+                            tap_action:
+                              action: none
+                            card_mod:
+                              style: |
+                                ha-card {
+                                  background: transparent !important;
+                                  --ha-card-background: transparent !important;
+                                  --mush-card-background-color: transparent !important;
+                                  box-shadow: none !important;
+                                  --ha-card-box-shadow: none !important;
+                                  border: none !important;
+                                  --ha-card-border-width: 0 !important;
+                                  padding: 0 !important;
+                                }
+                                ha-card::before, ha-card::after { content: none !important; display: none !important; }
+                          - type: horizontal-stack
+                            card_mod:
+                              style: |
+                                #root { display: flex !important; justify-content: center !important; gap: 14px !important; }
+                                #root > hui-card { display: contents !important; }
+                            cards:
+                              - type: custom:button-card
+                                icon: mdi:cpu-64-bit
+                                show_name: false
+                                show_state: false
+                                show_label: true
+                                label: "[[[ return states['sensor.system_monitor_processor_use'].state + '%' ]]]"
+                                size: 16px
+                                color: "#42a5f5"
+                                entity: sensor.system_monitor_processor_use
+                                tap_action:
+                                  action: more-info
+                                styles: &mini_stat_style
+                                  card:
+                                    - background: transparent
+                                    - box-shadow: none
+                                    - border: none
+                                    - padding: 0
+                                    - width: max-content
+                                    - height: 20px
+                                  grid:
+                                    - grid-template-areas: '"i l"'
+                                    - grid-template-columns: 16px auto
+                                    - grid-template-rows: 1fr
+                                    - column-gap: 4px
+                                    - justify-content: center
+                                    - align-items: center
+                                  icon:
+                                    - width: 16px
+                                  label:
+                                    - font-size: 11px
+                                    - font-weight: 500
+                                    - color: rgba(255, 255, 255, 0.85)
+                              - type: custom:button-card
+                                icon: mdi:memory
+                                show_name: false
+                                show_state: false
+                                show_label: true
+                                label: "[[[ return states['sensor.system_monitor_memory_usage'].state + '%' ]]]"
+                                size: 16px
+                                color: "#ab47bc"
+                                entity: sensor.system_monitor_memory_usage
+                                tap_action:
+                                  action: more-info
+                                styles: *mini_stat_style
+                    - type: horizontal-stack
+                      card_mod:
+                        style: *host_action_pos
+                      cards:
+                        - type: custom:button-card
+                          icon: mdi:restart
+                          show_name: false
+                          show_label: false
+                          show_state: false
+                          size: 12px
+                          color: orange
+                          tap_action:
+                            action: none
+                          double_tap_action:
+                            action: call-service
+                            service: shell_command.host_power_control
+                            service_data:
+                              host: core-01
+                              action: reboot
+                            confirmation:
+                              text: "Reboot core-01 (this Home Assistant host)?"
+                          hold_action:
+                            action: none
+                          styles: *mini_btn_style
+                        - type: custom:button-card
+                          icon: mdi:power
+                          show_name: false
+                          show_label: false
+                          show_state: false
+                          size: 12px
+                          color: red
+                          tap_action:
+                            action: none
+                          double_tap_action:
+                            action: call-service
+                            service: shell_command.host_power_control
+                            service_data:
+                              host: core-01
+                              action: shutdown
+                            confirmation:
+                              text: "⚠️ Shut down core-01 (this Home Assistant host)?"
+                          hold_action:
+                            action: none
+                          styles: *mini_btn_style
+
+                # nas-01
+                - type: vertical-stack
+                  card_mod:
+                    style: |
+                      #root { position: relative !important; gap: 0 !important; }
+                      #root > hui-card { display: contents !important; }
+                  cards:
+                    - type: custom:mushroom-template-card
+                      primary: "nas-01"
+                      secondary: "{{ 'Online' if is_state('binary_sensor.nas_01_online', 'on') else 'Offline' }}"
+                      icon: mdi:nas
+                      icon_color: "{{ 'green' if is_state('binary_sensor.nas_01_online', 'on') else 'amber' }}"
+                      layout: vertical
+                      tap_action:
+                        action: more-info
+                        entity: binary_sensor.nas_01_online
+                      card_mod:
+                        style: *host_tile
+                    - type: horizontal-stack
+                      card_mod:
+                        style: *host_action_pos
+                      cards:
+                        - type: custom:button-card
+                          icon: mdi:restart
+                          show_name: false
+                          show_label: false
+                          show_state: false
+                          size: 12px
+                          color: orange
+                          tap_action:
+                            action: none
+                          double_tap_action:
+                            action: call-service
+                            service: shell_command.host_power_control
+                            service_data:
+                              host: nas-01
+                              action: reboot
+                            confirmation:
+                              text: "Reboot nas-01?"
+                          hold_action:
+                            action: none
+                          styles: *mini_btn_style
+                        - type: custom:button-card
+                          icon: mdi:power
+                          show_name: false
+                          show_label: false
+                          show_state: false
+                          size: 12px
+                          color: red
+                          tap_action:
+                            action: none
+                          double_tap_action:
+                            action: call-service
+                            service: shell_command.host_power_control
+                            service_data:
+                              host: nas-01
+                              action: shutdown
+                            confirmation:
+                              text: "⚠️ Shut down nas-01?"
+                          hold_action:
+                            action: none
+                          styles: *mini_btn_style
+
+                # pve-01
+                - type: vertical-stack
+                  card_mod:
+                    style: |
+                      #root { position: relative !important; gap: 0 !important; }
+                      #root > hui-card { display: contents !important; }
+                  cards:
+                    - type: custom:mushroom-template-card
+                      primary: "pve-01"
+                      secondary: "{{ 'Online' if is_state('binary_sensor.pve_01_online', 'on') else 'Offline' }}"
+                      icon: mdi:server
+                      icon_color: "{{ 'green' if is_state('binary_sensor.pve_01_online', 'on') else 'amber' }}"
+                      layout: vertical
+                      tap_action:
+                        action: more-info
+                        entity: binary_sensor.pve_01_online
+                      card_mod:
+                        style: *host_tile
+                    - type: horizontal-stack
+                      card_mod:
+                        style: *host_action_pos
+                      cards:
+                        - type: custom:button-card
+                          icon: mdi:restart
+                          show_name: false
+                          show_label: false
+                          show_state: false
+                          size: 12px
+                          color: orange
+                          tap_action:
+                            action: none
+                          double_tap_action:
+                            action: call-service
+                            service: shell_command.host_power_control
+                            service_data:
+                              host: pve-01
+                              action: reboot
+                            confirmation:
+                              text: "Reboot pve-01?"
+                          hold_action:
+                            action: none
+                          styles: *mini_btn_style
+                        - type: custom:button-card
+                          icon: mdi:power
+                          show_name: false
+                          show_label: false
+                          show_state: false
+                          size: 12px
+                          color: red
+                          tap_action:
+                            action: none
+                          double_tap_action:
+                            action: call-service
+                            service: shell_command.host_power_control
+                            service_data:
+                              host: pve-01
+                              action: shutdown
+                            confirmation:
+                              text: "⚠️ Shut down pve-01?"
+                          hold_action:
+                            action: none
+                          styles: *mini_btn_style
+
+                # pve-02
+                - type: vertical-stack
+                  card_mod:
+                    style: |
+                      #root { position: relative !important; gap: 0 !important; }
+                      #root > hui-card { display: contents !important; }
+                  cards:
+                    - type: custom:mushroom-template-card
+                      primary: "pve-02"
+                      secondary: "{{ 'Online' if is_state('binary_sensor.pve_02_online', 'on') else 'Offline' }}"
+                      icon: mdi:server
+                      icon_color: "{{ 'green' if is_state('binary_sensor.pve_02_online', 'on') else 'amber' }}"
+                      layout: vertical
+                      tap_action:
+                        action: more-info
+                        entity: binary_sensor.pve_02_online
+                      card_mod:
+                        style: *host_tile
+                    - type: horizontal-stack
+                      card_mod:
+                        style: *host_action_pos
+                      cards:
+                        - type: custom:button-card
+                          icon: mdi:restart
+                          show_name: false
+                          show_label: false
+                          show_state: false
+                          size: 12px
+                          color: orange
+                          tap_action:
+                            action: none
+                          double_tap_action:
+                            action: call-service
+                            service: shell_command.host_power_control
+                            service_data:
+                              host: pve-02
+                              action: reboot
+                            confirmation:
+                              text: "Reboot pve-02?"
+                          hold_action:
+                            action: none
+                          styles: *mini_btn_style
+                        - type: custom:button-card
+                          icon: mdi:power
+                          show_name: false
+                          show_label: false
+                          show_state: false
+                          size: 12px
+                          color: red
+                          tap_action:
+                            action: none
+                          double_tap_action:
+                            action: call-service
+                            service: shell_command.host_power_control
+                            service_data:
+                              host: pve-02
+                              action: shutdown
+                            confirmation:
+                              text: "⚠️ Shut down pve-02?"
+                          hold_action:
+                            action: none
+                          styles: *mini_btn_style

@@ -1,0 +1,57 @@
+## User's existing dashboard — saved as reference for design patterns & entity IDs
+## Key patterns:
+## - custom:mod-card panel wrapper, max-width: 1050px centered
+## - Bubble horizontal-buttons-stack at TOP (sticky), not bottom
+## - Mushroom chips bar: time, weather, person, batteries
+## - Mushroom template cards as transparent section headers
+## - Glassmorphism: rgba(255,255,255,0.06), blur(25px) saturate(120%), border-top: rgba(255,255,255,0.2)
+## - 2-column grid, responsive at 800px
+## - Room cards: square grid with background images + gradient mask
+## - Subviews for rooms (not pop-ups)
+## - stack-in-card + mini-graph-card for energy charts
+## - Bubble card only for: horizontal-buttons-stack, washer progress bar
+##
+## REAL ENTITY IDs:
+## person.nexus
+## sensor.sm_s936b_battery_level
+## sensor.galaxy_watch8_classic_p3cr_battery_level
+## sensor.galaxy_watch4_classic_69db_battery_level
+## weather.forecast_home_2
+## media_player.living_room_tv_master
+## camera.camera_living_room_profile_000
+## camera.camera_living_room_hall_profile_000
+## binary_sensor.camera_living_room_motion_region_detection
+## binary_sensor.camera_living_room_hall_motion_region_detection
+## binary_sensor.camera_guest_bedroom_motion_region_detection
+## switch.t34_smart_plug_2_tv_switch_1 / sensor.t34_smart_plug_2_tv_power / sensor.t34_smart_plug_2_tv_total_energy
+## switch.t34_smart_plug_3_workspace_switch_1 / sensor.t34_smart_plug_3_workspace_power / sensor.t34_smart_plug_3_workspace_total_energy
+## switch.t34_smart_plug_4_fridge_switch_1 / sensor.t34_smart_plug_4_fridge_power / sensor.t34_smart_plug_4_fridge_total_energy
+## switch.t34_smart_plug_5_freezer_switch_1 / sensor.t34_smart_plug_5_freezer_power / sensor.t34_smart_plug_5_freezer_total_energy
+## switch.t34_smart_plug_switch_1 / sensor.t34_smart_plug_power (kitchen)
+## switch.switch_ac_living_room_switch_1 / light.switch_ac_living_room_backlight
+## switch.switch_ac_master_bedroom_switch_1 / light.switch_ac_master_bedroom_backlight
+## switch.switch_ac_guest_bedroom_switch_1 / light.switch_ac_guest_bedroom_backlight
+## sensor.washer_current_status / sensor.washer_remaining_minutes / sensor.washer_total_time / sensor.washer_remaining_time_2 / switch.washer_power_2
+## sensor.total_daily_energy_cost / sensor.total_monthly_energy_cost
+## sensor.system_monitor_processor_use / sensor.system_monitor_memory_usage
+## sensor.backup_backup_manager_state / update.hacs_update
+## shell_command.super_power_button
+## sensor.sure_spending_current_week / sensor.sure_spending_current_month
+
+
+## Infrastructure/Hosts subview (added 2026-09-29, per-host power management):
+## - New top-level view "Infrastructure" (/lovelace-yaml/infrastructure), 3-per-row grid
+##   ordered fw-01 -> core-01 -> nas-01 -> pve-01 -> pve-02
+## - Per-host glass card: rgba(255,255,255,0.04) bg, blur(16px), border-radius 22px,
+##   NO pill/chip backgrounds anywhere (custom:button-card direct styling, not mushroom-chips)
+## - Top-right overlay per card: small amber reboot (mdi:restart) + red shutdown (mdi:power)
+##   icon buttons, double-tap to trigger with confirmation dialog (tap/hold are no-ops)
+## - core-01 card: CPU/Mem shown as icon+label button-card chips (transparent bg),
+##   reusing sensor.system_monitor_processor_use / sensor.system_monitor_memory_usage
+## - "Hosts" header row: compact round red icon-button (44px) aligned far right,
+##   double-tap -> shell_command.super_power_button (the original "shut down everything")
+##
+## NEW ENTITY IDs:
+## binary_sensor.nas_01_online / .pve_01_online / .pve_02_online / .fw_01_online
+##   (command_line ping checks, scan_interval 120s)
+## shell_command.host_power_control (per-host reboot/shutdown, service_data: host/action)

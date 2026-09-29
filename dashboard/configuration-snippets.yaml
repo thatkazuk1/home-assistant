@@ -1,0 +1,49 @@
+# Home Assistant configuration.yaml snippets that back the Infrastructure
+# dashboard's per-host power control and online/offline status.
+#
+# These are excerpts, not a full configuration.yaml — add them to your own
+# configuration.yaml under the matching top-level keys (merge into an
+# existing `shell_command:` / `command_line:` block if you already have one).
+
+shell_command:
+  # Staggered "shut down everything" sweep — see scripts/emergency-shutdown.sh
+  super_power_button: "nohup /config/scripts/emergency-shutdown.sh > /dev/null 2>&1 &"
+  super_power_button_dry_run: "nohup /config/scripts/emergency-shutdown.sh --dry-run > /dev/null 2>&1 &"
+  # Per-host reboot/shutdown — see scripts/host-power-control.sh
+  # Called with service_data: {host: "<host-key>", action: "reboot"|"shutdown"}
+  host_power_control: 'nohup /config/scripts/host-power-control.sh "{{ host }}" "{{ action }}" > /dev/null 2>&1 &'
+
+command_line:
+  # Lightweight ping-based online/offline status for each host card. Expected
+  # entity IDs: binary_sensor.nas_01_online, .pve_01_online, .pve_02_online,
+  # .fw_01_online. The dashboard's own host (core-01) skips a self-ping and
+  # reuses its native sensor.system_monitor_processor_use / _memory_usage
+  # sensors instead.
+  - binary_sensor:
+      name: "NAS-01 Online"
+      unique_id: nas_01_online
+      command: 'ping -c 1 -W 2 192.168.50.163 > /dev/null 2>&1 && echo "on" || echo "off"'
+      payload_on: "on"
+      payload_off: "off"
+      scan_interval: 120
+  - binary_sensor:
+      name: "PVE-01 Online"
+      unique_id: pve_01_online
+      command: 'ping -c 1 -W 2 192.168.50.10 > /dev/null 2>&1 && echo "on" || echo "off"'
+      payload_on: "on"
+      payload_off: "off"
+      scan_interval: 120
+  - binary_sensor:
+      name: "PVE-02 Online"
+      unique_id: pve_02_online
+      command: 'ping -c 1 -W 2 192.168.50.11 > /dev/null 2>&1 && echo "on" || echo "off"'
+      payload_on: "on"
+      payload_off: "off"
+      scan_interval: 120
+  - binary_sensor:
+      name: "FW-01 Online"
+      unique_id: fw_01_online
+      command: 'ping -c 1 -W 2 192.168.10.1 > /dev/null 2>&1 && echo "on" || echo "off"'
+      payload_on: "on"
+      payload_off: "off"
+      scan_interval: 120
